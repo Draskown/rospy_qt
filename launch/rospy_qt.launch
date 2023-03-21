@@ -1,0 +1,15 @@
+<launch>
+	
+	<node pkg="autoracepy" name="bar_control" type="bar_control.py" output="screen"/>
+	<node pkg="autoracepy" name="bar_detect" type="bar_detect.py"/>
+	<node pkg="autoracepy" name="light_controller" type="light_controller.py"/>
+	<node pkg="autoracepy" name="line_control" type="line_control.py"/>
+	<node pkg="autoracepy" name="line_detect" type="line_detect.py"/>
+	<node pkg="autoracepy" type="mission_control.py" name="mission_control" output="screen" />
+	<node pkg="autoracepy" name="odometry" type="odom.py" output="screen"/>
+	<node pkg="autoracepy" name="parking" type="parking.py" output="screen"/>	
+	<node pkg="autoracepy" name="sign_detect" type="sign_detect.py" output="screen"/>
+	<node pkg="autoracepy" name="traffic_light_detect" type="traffic_light_detector.py"/>
+	<node pkg="autoracepy" name="tunnel_start" type="tunnel_start.py" output="screen"/>
+	<node pkg="autoracepy" name="xlidarcontrol" type="xlidarcontrol.py" output="screen"/>
+</launch>
