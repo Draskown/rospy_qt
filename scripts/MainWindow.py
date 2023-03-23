@@ -1,8 +1,15 @@
+import rospy, roslaunch
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
+from cv_bridge import CvBridge
+
 from PyQt5.Qt import Qt
 from PyQt5.QtGui import (QPalette,
                          QColor,
                          QPixmap,
-                         QFont)
+                         QFont,
+                         QImage)
 from PyQt5.QtWidgets import (QApplication,
                              QMainWindow,
                              QPushButton,
@@ -11,6 +18,7 @@ from PyQt5.QtWidgets import (QApplication,
                              QHBoxLayout,
                              QVBoxLayout,
                              QMessageBox)
+from PyQt5.QtCore import QThread
 
 from CameraDebugWidget import CameraDebugWidget
 from LidarWidget import LidarWidget
@@ -25,7 +33,7 @@ class MainWindow(QMainWindow):
 
         self.init_UI()
 
-    def init_UI(self):
+    def init_UI(self):       
         # Set window title
         self.setWindowTitle('Main Window')
 
@@ -40,15 +48,14 @@ class MainWindow(QMainWindow):
         self.camera_debug_widget = CameraDebugWidget()
         self.lidar_widget = LidarWidget()
         self.location_info_widget = LocationInfoWidget()
+
         self.manual_movement_widget = ManualMovementWidget()
 
         # Create layout for central widget
         main_layout = QHBoxLayout()
 
         # Set image
-        image_label = QLabel()
-        image = QPixmap("./Images/1.png").scaled(640, 480)
-        image_label.setPixmap(image)
+        self.image_label = QLabel()
 
         # Create Camera Debug button
         camera_debug_button = QPushButton('Camera Debug')
@@ -60,11 +67,11 @@ class MainWindow(QMainWindow):
         location_info_button = QPushButton('Location Info')
 
         # Create Manual Movement button
-        manual_movement_button = QPushButton('Manual Movement')
+        self.manual_movement_button = QPushButton('Manual Movement')
 
         # Create Start Mission switch
-        start_mission_button = QPushButton('Start Mission')
-
+        self.start_mission_button = QPushButton('Start Mission')
+        
         # Add Items to the first column in a HLayout
         column1 = QVBoxLayout()
         column1.addStretch()
@@ -74,14 +81,14 @@ class MainWindow(QMainWindow):
 
         # Add Items to the second column in a HLayout
         column2 = QVBoxLayout()
-        column2.addWidget(image_label, Qt.AlignTop)
-        column2.addWidget(start_mission_button, 5, Qt.AlignHCenter)
+        column2.addWidget(self.image_label, Qt.AlignTop)
+        column2.addWidget(self.start_mission_button, 5, Qt.AlignHCenter)
 
         # Add Items to the third column in a HLayout
         column3 = QVBoxLayout()
         column3.addStretch()
         column3.addWidget(location_info_button, Qt.AlignTop)
-        column3.addWidget(manual_movement_button, Qt.AlignTop)
+        column3.addWidget(self.manual_movement_button, Qt.AlignTop)
         column3.addStretch()
 
         # Add those columns into the HLayout
@@ -96,7 +103,19 @@ class MainWindow(QMainWindow):
         camera_debug_button.clicked.connect(self.show_camera_debug_widget)
         lidar_button.clicked.connect(self.show_lidar_widget)
         location_info_button.clicked.connect(self.show_location_info_widget)
-        manual_movement_button.clicked.connect(self.show_manual_movement_widget)
+        self.manual_movement_button.clicked.connect(self.show_manual_movement_widget)
+        
+        self.start_mission_button.clicked.connect(self.start_mission)
+
+        # An object of image conversion
+        self.cvBridge = CvBridge()
+        # ROS topic subscribers
+        camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
+        plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
+        
+		# Set a publisher for the robot's velocity
+        self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+
 
     # Events
     def keyPressEvent(self, e):
@@ -118,7 +137,21 @@ class MainWindow(QMainWindow):
         else: e.ignore()
     ###
 
+
     # Methods
+    def cb_plan(self, data):
+        self.start = data.data
+
+    def start_mission(self):
+        self.manual_movement_button.setDisabled(True)
+        self.location_info_widget.set_position_btn.setDisabled(True)
+        
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        launch = roslaunch.parent.ROSLaunchParent(uuid, ["/root/ros_workspace/src/rospy_qt/launch/rospy_qt.launch"])
+        launch.start()
+        
+
     def show_camera_debug_widget(self):
         self.camera_debug_widget.show()
 
@@ -130,6 +163,14 @@ class MainWindow(QMainWindow):
 
     def show_manual_movement_widget(self):
         self.manual_movement_widget.show()
+
+    def cb_cam(self, img):
+        cv_img = self.cvBridge.imgmsg_to_cv2(img,"rgb8")
+        h, w, ch = cv_img.shape
+        bpl = ch*w
+        qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
+        p = QPixmap.fromImage(qimage.scaled(int(640*0.9), int(480*0.9)))
+        self.image_label.setPixmap(p)
     ###
 
 
@@ -165,6 +206,7 @@ def set_style(app):
 if __name__ == "__main__":
     application = QApplication([])
     set_style(application)
+    rospy.init_node("MainWindow", disable_signals=True)
     main_window = MainWindow()
     main_window.show()
     application.exec_()
