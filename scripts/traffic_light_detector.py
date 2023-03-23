@@ -172,7 +172,7 @@ class TlDetector():
 		self.pub_traffic_light.publish(self.light_msg)
 		temp = np.hsplit(cv_image_gray,2) 
 		cv_image_gray = temp[1]
-		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(cv_image_gray, "8UC1"))
+		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(cv_image_gray, "rgb8"))
 	
 	
 if __name__ == '__main__':

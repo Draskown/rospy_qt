@@ -73,7 +73,7 @@ class Xlidarcontrol():
 	def cb_tl_img(self, image):
 		try:
 			if self.mode == 2:
-				self.pub_image(image, "8UC1")
+				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
 		
@@ -81,7 +81,7 @@ class Xlidarcontrol():
 	def cb_bar_img(self, image):
 		try:
 			if self.mode == 3:
-				self.pub_image(image, "8UC1")
+				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
 
@@ -114,8 +114,8 @@ class Xlidarcontrol():
 				else:
 					self.angle = i+1
 			
-			# Draw every tenth ray
-			if i%10 != 0:
+			# Draw every fifth ray
+			if i%5 != 0:
 				if data.ranges[i] < closest_ten:
 					closest_ten = data.ranges[i]
 			else:
@@ -127,7 +127,7 @@ class Xlidarcontrol():
 					closest_ten = 2
 		
 		# Publish the lidar's image and update the empty image
-		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(self.empty_image, "8UC1"))
+		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(self.empty_image, "rgb8"))
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
 	
 	# Publish the image in selected mode

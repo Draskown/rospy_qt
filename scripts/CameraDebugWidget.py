@@ -1,3 +1,7 @@
+import rospy
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget,
                              QLabel,
@@ -8,7 +12,7 @@ from PyQt5.QtWidgets import (QWidget,
                              QCheckBox,
                              QSizePolicy,
                              QApplication)
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage
 from Common_defs import set_icon, key_pressed
 
 
@@ -37,9 +41,12 @@ class CameraDebugWidget(QWidget):
         # Set Window Name
         self.setWindowTitle("Camera Debug Widget")
 
-        # Create image output
-        self.image_label = QLabel()
-        self.image_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # Create image outputs
+        self.cam_label = QLabel()
+        self.cam_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        self.cam_line_label = QLabel()
+        self.cam_line_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         # Create comboboxes
         self.front_camera_combo = QComboBox()
@@ -53,6 +60,7 @@ class CameraDebugWidget(QWidget):
         # Create layouts for comboboxes and switches
         Grid_combo = QGridLayout()
         HLayout_switch = QHBoxLayout()
+        HLayout_label = QHBoxLayout()
 
         Grid_combo.addWidget(QLabel('Front Camera Mode:'), 0, 0,
                              alignment=Qt.AlignCenter)
@@ -65,18 +73,36 @@ class CameraDebugWidget(QWidget):
         HLayout_switch.addWidget(line_detection_switch)
         HLayout_switch.addWidget(perspective_switch)
 
+        HLayout_label.addWidget(self.cam_label, alignment=Qt.AlignLeft)
+        HLayout_label.addWidget(self.cam_line_label, alignment=Qt.AlignRight)
+
         # Create main layout for widget
         main_layout = QVBoxLayout()
-        main_layout.addWidget(self.image_label, alignment=Qt.AlignHCenter)
+        main_layout.addLayout(HLayout_label)
         main_layout.addLayout(Grid_combo)
         main_layout.addLayout(HLayout_switch)
 
         self.setLayout(main_layout)
 
-        self.set_image("./Images/3.jpg")
+        # CV converter
+        self.cvBridge = CvBridge()       
+        # A subscriber for a ROS topic
+        cam_sub = rospy.Subscriber("/camera/image", Image, self.cb_cam, queue_size=1)    
+        cam_line_sub = rospy.Subscriber("/camera_line/image", Image, self.cb_line, queue_size=1)    
 
-    def set_image(self, path):
-        # Convert image to pixmap and set it as image label's pixmap
-        pixmap = QPixmap(path).scaled(600, 400)
-        self.image_label.setPixmap(pixmap)
+    def cb_line(self, data):
+        cv_img = self.cvBridge.imgmsg_to_cv2(data,"rgb8")
+        h, w, ch = cv_img.shape
+        bpl = ch*w
+        qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
+        p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
+        self.cam_line_label.setPixmap(p)
+
+    def cb_cam(self, data):
+        cv_img = self.cvBridge.imgmsg_to_cv2(data,"rgb8")
+        h, w, ch = cv_img.shape
+        bpl = ch*w
+        qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
+        p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
+        self.cam_label.setPixmap(p)
     ###

@@ -12,7 +12,7 @@ Tunnel: 3.07
 '''
 
 # Needed imports
-import rospy, cv2
+import rospy
 from std_msgs.msg import Float64, Bool, String
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan

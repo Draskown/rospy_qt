@@ -42,8 +42,8 @@ class LocationInfoWidget(QWidget):
         self.x_start_input.setValidator(QIntValidator())
         self.y_start_input = QLineEdit(self)
         self.y_start_input.setValidator(QIntValidator())
-        set_position_btn = QPushButton("Set position")
-        reset_position_btn = QPushButton("Reset position")
+        self.set_position_btn = QPushButton("Set position")
+        self.reset_position_btn = QPushButton("Reset position")
 
         # Create text outputs for correction and position
         self.correction_of_direction_output = QLabel("0")
@@ -81,8 +81,8 @@ class LocationInfoWidget(QWidget):
         column1.addWidget(self.x_start_input, Qt.AlignHCenter)
         column1.addWidget(labels["y_start"], Qt.AlignHCenter)
         column1.addWidget(self.y_start_input, Qt.AlignHCenter)
-        column1.addWidget(set_position_btn, Qt.AlignHCenter)
-        column1.addWidget(reset_position_btn, Qt.AlignHCenter)
+        column1.addWidget(self.set_position_btn, Qt.AlignHCenter)
+        column1.addWidget(self.reset_position_btn, Qt.AlignHCenter)
 
         # Add Items to the second column
         column2 = QVBoxLayout()

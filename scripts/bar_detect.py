@@ -110,7 +110,7 @@ class BarDetect():
 		
 		# Publish the binary image and the detection's result
 		self.pub_bar.publish(bar_msg)
-		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(res, "8UC1"))
+		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(res, "rgb8"))
 
 
 
