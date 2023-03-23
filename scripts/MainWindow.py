@@ -17,8 +17,12 @@ from PyQt5.QtWidgets import (QApplication,
                              QWidget,
                              QHBoxLayout,
                              QVBoxLayout,
-                             QMessageBox)
-from PyQt5.QtCore import QThread
+                             QMessageBox,
+                             QStatusBar)
+from PyQt5.QtCore import (QThread,
+                          QObject,
+                          pyqtSignal,
+                          QTimer)
 
 from CameraDebugWidget import CameraDebugWidget
 from LidarWidget import LidarWidget
@@ -69,8 +73,18 @@ class MainWindow(QMainWindow):
         # Create Manual Movement button
         self.manual_movement_button = QPushButton('Manual Movement')
 
-        # Create Start Mission switch
+        # Create Start Mission button
         self.start_mission_button = QPushButton('Start Mission')
+        
+        # Init the status bar thread
+        self.worker = Worker()
+        self.worker.message.connect(self.statusBar().showMessage)
+
+        self.thread = QThread(self)
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.show_message)
+        self.thread.start()
         
         # Add Items to the first column in a HLayout
         column1 = QVBoxLayout()
@@ -136,9 +150,7 @@ class MainWindow(QMainWindow):
                 win.close()
         else: e.ignore()
     ###
-
-
-    # Methods
+    
     def cb_plan(self, data):
         self.start = data.data
 
@@ -151,7 +163,6 @@ class MainWindow(QMainWindow):
         launch = roslaunch.parent.ROSLaunchParent(uuid, ["/root/ros_workspace/src/rospy_qt/launch/rospy_qt.launch"])
         launch.start()
         
-
     def show_camera_debug_widget(self):
         self.camera_debug_widget.show()
 
@@ -172,6 +183,20 @@ class MainWindow(QMainWindow):
         p = QPixmap.fromImage(qimage.scaled(int(640*0.9), int(480*0.9)))
         self.image_label.setPixmap(p)
     ###
+
+
+# Class for handling the displayed log msg
+class Worker(QObject):
+    message = pyqtSignal(str)
+    msg = []
+
+    def show_message(self):
+        while True:
+            if len(self.msg) > 0:
+                self.message.emit(self.msg.pop(0))
+                QThread.sleep(1)
+            else:
+                self.message.emit("")
 
 
 def set_style(app):
