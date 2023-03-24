@@ -1,3 +1,5 @@
+import rospy
+from std_msgs.msg import Float64
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import (QWidget,
@@ -14,7 +16,20 @@ class LocationInfoWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+        # init global variables
+        self.position = [0.0, 0.0]
+        self.direction = 0.0
+
         self.initUI()
+
+        # Subscribers for the positions
+        x_sub = rospy.Subscriber('position_x', Float64, self.set_x, queue_size=1)
+        y_sub = rospy.Subscriber('position_y', Float64, self.set_y, queue_size=1)
+        direction_sub = rospy.Subscriber('direction', Float64, self.set_dir, queue_size=1)
+
+        # Set ROS Publishers
+        self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
+        self.position_y_pub = rospy.Publisher('set_y', Float64, queue_size=1)
 
     # Events
     def keyPressEvent(self, e):
@@ -45,15 +60,18 @@ class LocationInfoWidget(QWidget):
         self.set_position_btn = QPushButton("Set position")
         self.reset_position_btn = QPushButton("Reset position")
 
+        self.set_position_btn.clicked.connect(self.set_position)
+        self.reset_position_btn.clicked.connect(self.reset_position)
+
         # Create text outputs for correction and position
         self.correction_of_direction_output = QLabel("0")
         self.correction_of_position_output = QLabel("0")
-        self.global_position = QLabel("0, 0")
+        self.global_position = QLabel()
 
         # Create Text outputs for the encoders and direction
         self.encoder1 = QLabel("0")
         self.encoder2 = QLabel("0")
-        self.direction = QLabel("0, 0")
+        self.direction_label = QLabel()
 
         # Configure an array of labels
         labels = {"x_start": QLabel("X start position:"),
@@ -69,7 +87,7 @@ class LocationInfoWidget(QWidget):
                   "enc2_label": QLabel("Encoder2:"),
                   "enc2": self.encoder2,
                   "dir_label": QLabel("Direction"),
-                  "dir": self.direction}
+                  "dir": self.direction_label}
 
         for item in labels.items():
             item[1].setAlignment(Qt.AlignHCenter)
@@ -101,7 +119,7 @@ class LocationInfoWidget(QWidget):
         column3.addWidget(labels["enc2_label"], Qt.AlignHCenter)
         column3.addWidget(self.encoder2, Qt.AlignHCenter)
         column3.addWidget(labels["dir_label"], Qt.AlignHCenter)
-        column3.addWidget(self.direction, Qt.AlignHCenter)
+        column3.addWidget(self.direction_label, Qt.AlignHCenter)
 
         # Add all of the columns into the Main Layout
         main_layout.addLayout(column1)
@@ -117,3 +135,48 @@ class LocationInfoWidget(QWidget):
 
         # Set window properties
         self.setWindowTitle("Location Info Widget")
+
+    # Listens fot the x position
+    def set_x(self, data):
+        self.position[0] = data.data
+        self.update_position()
+
+    # Listens for the y position
+    def set_y(self, data):
+        self.position[1] = data.data
+        self.update_position()
+
+    # Listens for the direction
+    def set_dir(self, data):
+        self.direction = data.data
+        self.update_direction()
+
+    # Updates the position label
+    def update_position(self):
+        label_text = str(round(self.position[0], 3)) + ", " + str(round(self.position[1], 3))
+        self.global_position.setText(label_text)
+
+    # Updates the direction label
+    def update_direction(self):
+        label_text = str(round(self.direction, 3))
+        self.direction_label.setText(label_text)
+
+    # Publish the set position of the encoders
+    def set_position(self):
+        x_pos = Float64()
+        y_pos = Float64()
+        x_pos.data = self.position[0]
+        y_pos.data = self.position[1]
+        self.position_x_pub.publish(x_pos)
+        self.position_y_pub.publish(y_pos)
+    
+    # Publish the resetted position of the encoders
+    def reset_position(self):
+        x_pos = Float64()
+        y_pos = Float64()
+        x_pos.data = 0.0
+        y_pos.data = 0.0
+        self.x_start_input.setText("")
+        self.y_start_input.setText("")
+        self.position_x_pub.publish(x_pos)
+        self.position_y_pub.publish(y_pos)

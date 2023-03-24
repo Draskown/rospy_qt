@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
     def start_mission(self):
         self.manual_movement_button.setDisabled(True)
         self.location_info_widget.set_position_btn.setDisabled(True)
+        self.location_info_widget.reset_position_btn.setDisabled(True)
         
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
