@@ -20,6 +20,8 @@ class Encoders():
         self.position_x = 0.0
         self.position_y = 0.0
         self.direction = 0.0
+        self.left_enc = 0.0
+        self.right_enc = 0.0
 
         # Create ROS topics subscribers
         rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
@@ -31,6 +33,9 @@ class Encoders():
         self.position_x_publisher = rospy.Publisher('position_x', Float64, queue_size=1)
         self.position_y_publisher = rospy.Publisher('position_y', Float64, queue_size=1)
         self.direction_publisher = rospy.Publisher('direction', Float64, queue_size=1)
+
+        self.enc_r_pub = rospy.Publisher('enc_r', Float64, queue_size=1)
+        self.enc_l_pub = rospy.Publisher('enc_l', Float64, queue_size=1)
 
 		# Do every subscriber's method until ros is shut down
         while not rospy.is_shutdown():
@@ -66,6 +71,10 @@ class Encoders():
             distance_left_now = total_velocity_left * time_diff
             distance_right_now = total_velocity_right * time_diff
 
+            # Calculate overall distance
+            self.left_enc += distance_left_now
+            self.right_enc += distance_right_now
+
             # Calculate delta s and delta turn
             delta_s = self.wheel_radius * (distance_right_now + distance_left_now) / 2.0
             delta_theta = self.wheel_radius * (distance_right_now - distance_left_now) / (self.wheel_radius * 2.0)
@@ -79,6 +88,10 @@ class Encoders():
             self.position_x_publisher.publish(self.position_x)
             self.position_y_publisher.publish(self.position_y)
             self.direction_publisher.publish(self.direction % math.radians(360.))
+
+            # Publish encoders
+            self.enc_l_pub.publish(self.left_enc)
+            self.enc_r_pub.publish(self.right_enc)
 
 
     # Listens for the x position and sets it

@@ -26,6 +26,8 @@ class LocationInfoWidget(QWidget):
         x_sub = rospy.Subscriber('position_x', Float64, self.set_x, queue_size=1)
         y_sub = rospy.Subscriber('position_y', Float64, self.set_y, queue_size=1)
         direction_sub = rospy.Subscriber('direction', Float64, self.set_dir, queue_size=1)
+        enc_r_sub = rospy.Subscriber('enc_r', Float64, self.set_right, queue_size=1)
+        enc_l_sub = rospy.Subscriber('enc_l', Float64, self.set_left, queue_size=1)
 
         # Set ROS Publishers
         self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
@@ -69,8 +71,8 @@ class LocationInfoWidget(QWidget):
         self.global_position = QLabel()
 
         # Create Text outputs for the encoders and direction
-        self.encoder1 = QLabel("0")
-        self.encoder2 = QLabel("0")
+        self.right_encoder = QLabel()
+        self.left_encoder = QLabel()
         self.direction_label = QLabel()
 
         # Configure an array of labels
@@ -82,10 +84,10 @@ class LocationInfoWidget(QWidget):
                   "cor_pos": self.correction_of_position_output,
                   "pos_label": QLabel("Global position:"),
                   "pos": self.global_position,
-                  "enc1_label": QLabel("Encoder1:"),
-                  "enc1": self.encoder1,
-                  "enc2_label": QLabel("Encoder2:"),
-                  "enc2": self.encoder2,
+                  "enc1_label": QLabel("Right Encoder:"),
+                  "enc1": self.right_encoder,
+                  "enc2_label": QLabel("Left Encoder:"),
+                  "enc2": self.left_encoder,
                   "dir_label": QLabel("Direction"),
                   "dir": self.direction_label}
 
@@ -115,9 +117,9 @@ class LocationInfoWidget(QWidget):
         # Add Items to the third column
         column3 = QVBoxLayout()
         column3.addWidget(labels["enc1_label"], Qt.AlignHCenter)
-        column3.addWidget(self.encoder1, Qt.AlignHCenter)
+        column3.addWidget(self.right_encoder, Qt.AlignHCenter)
         column3.addWidget(labels["enc2_label"], Qt.AlignHCenter)
-        column3.addWidget(self.encoder2, Qt.AlignHCenter)
+        column3.addWidget(self.left_encoder, Qt.AlignHCenter)
         column3.addWidget(labels["dir_label"], Qt.AlignHCenter)
         column3.addWidget(self.direction_label, Qt.AlignHCenter)
 
@@ -148,18 +150,13 @@ class LocationInfoWidget(QWidget):
 
     # Listens for the direction
     def set_dir(self, data):
-        self.direction = data.data
-        self.update_direction()
+        label_text = str(round(data.data, 3))
+        self.direction_label.setText(label_text)
 
     # Updates the position label
     def update_position(self):
         label_text = str(round(self.position[0], 3)) + ", " + str(round(self.position[1], 3))
         self.global_position.setText(label_text)
-
-    # Updates the direction label
-    def update_direction(self):
-        label_text = str(round(self.direction, 3))
-        self.direction_label.setText(label_text)
 
     # Publish the set position of the encoders
     def set_position(self):
@@ -180,3 +177,13 @@ class LocationInfoWidget(QWidget):
         self.y_start_input.setText("")
         self.position_x_pub.publish(x_pos)
         self.position_y_pub.publish(y_pos)
+
+    # Listens for the left encoder's value
+    def set_left(self, data):
+        label_text = str(round(data.data, 3))
+        self.left_encoder.setText(label_text)
+
+    # Listens for the right encoder's value
+    def set_right(self, data):
+        label_text = str(round(data.data, 3))
+        self.right_encoder.setText(label_text)
