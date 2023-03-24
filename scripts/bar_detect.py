@@ -101,7 +101,7 @@ class BarDetect():
 		bar_msg = String()
 
 		# Applies the mask to the image
-		temp, res = self.mask_red(cv_image_original)
+		temp, res = mask_red(cv_image_original)
 		
 		# If found any red rectangles - return bar state
 		if temp:

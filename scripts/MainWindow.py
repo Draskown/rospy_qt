@@ -1,7 +1,7 @@
 import rospy, roslaunch
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 from cv_bridge import CvBridge
 
 from PyQt5.QtGui import (QPalette,
@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QApplication,
                              QWidget,
                              QHBoxLayout,
                              QVBoxLayout,
-                             QMessageBox,)
+                             QMessageBox)
 from PyQt5.QtCore import (QThread,
                           QObject,
                           pyqtSignal,
@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         # ROS topic subscribers
         camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
         plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
+        log_sub = rospy.Subscriber('log_msg', String, self.cb_log, queue_size=1)
         
 		# Set a publisher for the robot's velocity
         self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
@@ -156,9 +157,13 @@ class MainWindow(QMainWindow):
                 win.close()
         else: e.ignore()
     ###
-    
+
+    # Methods
     def cb_plan(self, data):
         self.start = data.data
+
+    def cb_log(self, data):
+        self.worker.msg.append(data.data)
 
     def start_mission(self):
         self.manual_movement_button.setDisabled(True)

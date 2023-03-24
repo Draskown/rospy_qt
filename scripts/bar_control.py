@@ -83,7 +83,7 @@ class BarControl():
 		rospy.sleep(time)	
 
 	def do_stop(self):		
-		# Stop for a limited time
+		# Move an the previously stated speed for a limited time
 		rospy.sleep(1.45)	
 
 		# Disable moving along the lines by publishing the false state
@@ -93,19 +93,21 @@ class BarControl():
 		rospy.sleep(0.1)
 		pub_line_move.publish(flag_move_line)
 		
+		self.msg.data = 'Stop sign detected \r\n'
+		self.pub_msg.publish(self.msg)
 		self.msg.data = 'Moving forward \r\n'
 		self.pub_msg.publish(self.msg)
-		
+
 		# If robot has not yet arrived at desired location
 		while not (abs(self.pose_x + 1.75) < 0.15 and self.pose_y < 1):
 			self.error = self.target_orientation - abs(self.orientation)
 			self.pubvel(0.2, -self.error*5, 0.1)
 		
-		# Move it forward
+		# Stop the robot
 		for i in range(20,0, -2):
 			self.pubvel(i/100,0,0.2)
 		
-		# Stop the robot
+		# Stop the robot completely
 		self.pubvel(0.0, 0.0, 0.1)
 		
 		self.pub_msg.publish('Waiting for the bar to open \r\n')
