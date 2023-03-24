@@ -12,4 +12,5 @@
 	<node pkg="rospy_qt" name="traffic_light_detect" type="traffic_light_detector.py"/>
 	<node pkg="rospy_qt" name="tunnel_start" type="tunnel_start.py" output="screen"/>
 	<node pkg="rospy_qt" name="xlidarcontrol" type="xlidarcontrol.py" output="screen"/>
+	<node pkg="rospy_qt" name="encoders" type="encoders.py" output="screen"/>
 </launch>

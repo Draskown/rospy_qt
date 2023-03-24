@@ -129,6 +129,7 @@ class MainWindow(QMainWindow):
 
         # An object of image conversion
         self.cvBridge = CvBridge()
+        
         # ROS topic subscribers
         camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
         plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)

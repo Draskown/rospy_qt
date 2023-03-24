@@ -42,14 +42,14 @@ def mask_red(img):
 class BarDetect():
 	def __init__(self):
 		# Initializing of global variables
-		self.pub_bar = rospy.Publisher('bar', String, queue_size=1)
 		self.cvBridge = CvBridge()
 		self.counter = 1
 		self.enable = False
 		self.plan = True
 
-		# Set a publisher for an image
+		# Set ROS topics publishers
 		self.pub_image = rospy.Publisher('image_bar', Image, queue_size=1)
+		self.pub_bar = rospy.Publisher('bar', String, queue_size=1)
 		
 		# Set subscribers for ROS topics
 		sub_image = rospy.Subscriber('/camera/image', Image, self.cbImageProjection, queue_size=1)
