@@ -120,6 +120,7 @@ class TlDetector():
 					if self.light_msg.data != "green" and self.plan:
 						rospy.sleep(0.1)
 					else:
+						rospy.signal_shutdown('force ending')
 						cv2.destroyAllWindows()
 						break
 				except KeyboardInterrupt:
@@ -172,7 +173,8 @@ class TlDetector():
 		self.pub_traffic_light.publish(self.light_msg)
 		temp = np.hsplit(cv_image_gray,2) 
 		cv_image_gray = temp[1]
-		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(cv_image_gray, "rgb8"))
+		cv_image_rgb = cv2.cvtColor(cv_image_gray, cv2.COLOR_GRAY2RGB)
+		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(cv_image_rgb, "rgb8"))
 	
 	
 if __name__ == '__main__':

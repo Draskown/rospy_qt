@@ -29,6 +29,7 @@ class TunnelStart():
 
 		# Set a publisher for the robot's velocity
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
 
 		# Set subscribers for the ROS topics
 		sub_scan = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
@@ -41,12 +42,13 @@ class TunnelStart():
 			try:
 				if not self.end_of_mission and self.plan:				
 					if(self.tunnel and not self.in_tunnel):
-						print("tunnel detected")
+						self.pub_msg.publish("Tunnel detected\r\n")
 						rospy.sleep(3)
 						self.in_tunnel = True
 					elif self.in_tunnel:
 						self.in_tunnel_go()
 				else:
+					rospy.signal_shutdown('force ending')
 					break
 			except KeyboardInterrupt:
 				break

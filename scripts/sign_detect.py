@@ -91,6 +91,7 @@ class SignDetect():
 				if self.plan:
 					rospy.sleep(0.1)
 				else:
+					rospy.signal_shutdown('force ending')
 					cv2.destroyAllWindows()
 					break
 			except KeyboardInterrupt:

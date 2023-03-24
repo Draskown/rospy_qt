@@ -62,6 +62,7 @@ class BarDetect():
 				if self.plan:
 					rospy.sleep(0.1)
 				else:
+					rospy.signal_shutdown('force ending')
 					cv2.destroyAllWindows()
 					break
 			except KeyboardInterrupt:
@@ -109,8 +110,9 @@ class BarDetect():
 			bar_msg.data = "none"
 		
 		# Publish the binary image and the detection's result
+		cv_image_rgb = cv2.cvtColor(res, cv2.COLOR_GRAY2RGB)
 		self.pub_bar.publish(bar_msg)
-		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(res, "rgb8"))
+		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(cv_image_rgb, "rgb8"))
 
 
 

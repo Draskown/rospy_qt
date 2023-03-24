@@ -127,7 +127,8 @@ class Xlidarcontrol():
 					closest_ten = 2
 		
 		# Publish the lidar's image and update the empty image
-		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(self.empty_image, "rgb8"))
+		cv_image_rgb = cv2.cvtColor(self.empty_image, cv2.COLOR_GRAY2RGB)
+		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(cv_image_rgb, "rgb8"))
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
 	
 	# Publish the image in selected mode

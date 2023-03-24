@@ -26,12 +26,15 @@ class OdomCalculator():
 		self.plan = True
 		self.ros_plan = Bool()
 		self.msg = ""
+		self.log_msg = String()
 		self.closest_ten = 2
 		self.k = 0
 
-		# Set publishers for the custom odometry calculation and plan's state
+		# Set publishers for the custom odometry calculation, plan's state
+		# And to publish the log messages
 		self.odom_pub = rospy.Publisher('codom', Float64, queue_size=1)
 		self.plan_pub = rospy.Publisher('plan', Bool, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
 
 		# Set subscribers for the ROS topics
 		cmd_sub = rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
@@ -40,14 +43,20 @@ class OdomCalculator():
 		tl_msg_sub = rospy.Subscriber('tl_msg', String, self.cb_tl, queue_size=1)
 		bar_msg_sub = rospy.Subscriber('bar', String, self.cb_bar, queue_size=1)
 
+		# Handle the class until the ROS is shut down
+		while not rospy.is_shutdown():
+			self.main()
+
 	# Publishing of the plan's state
 	def main(self):
 		if self.plan:
 			rospy.sleep(0.1)
 			self.pubplan()
 		else:
+			print(self.msg)
+			self.log_msg.data = self.msg + "\r\n"
+			self.pub_msg.publish(self.log_msg)
 			self.pubplan()
-			print(self.msg + "\r")
 			rospy.signal_shutdown('force ending')
 			return
 
@@ -55,7 +64,7 @@ class OdomCalculator():
 	def cb_vel(self, velocity):
 		self.x.data += velocity.linear.x / 100.0
 
-		# And then corretcs the robot's position
+		# And then corrects the robot's position
 		self.odom_pub.publish(self.x)
 
 	# Listens for the lidar's data
@@ -112,7 +121,7 @@ class OdomCalculator():
 
 
 if __name__ == "__main__":
-	rospy.init_node('codom', disable_signals = True)
+	rospy.init_node('odometry', disable_signals = True)
 	try:
 		bardetect = OdomCalculator()
 	except rospy.ROSInterruptException:

@@ -18,9 +18,13 @@ class LightController():
 		sub_sign = rospy.Subscriber('traffic_light', String, self.cb_traffic_light, queue_size=1)
 		sub_state = rospy.Subscriber('state', String, self.cb_ts, queue_size=1)
 
-		# Set publishers for robot's velocity and a flag to whether use line moving or not
+		# Set publishers for robot's velocity,
+		# A flag to whether use line moving or not,
+		# To publish log messages
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_line_move = rospy.Publisher('line_move_flag', Bool, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+
 
 		# Wait while the light is detected
 		# Then do the handling
@@ -28,12 +32,13 @@ class LightController():
 			try:
 				if self.plan:
 					if self.light:
-						print("start traffic light mission")
+						self.pub_msg.publish("Start traffic light mission \r\n")
 						self.do_traffic_light()
 						break
 					else:
 						rospy.sleep(0.1)
 				else:
+					rospy.signal_shutdown('force ending')
 					break
 			except KeyboardInterrupt:
 				break
@@ -78,7 +83,7 @@ class LightController():
 		for i in range(5,0, -1):
 			self.pub_velocity(i/100,0,0.1)
 		
-		print("published stop msg")
+		self.pub_msg.publish("Published stop msg\r\n")
 
 		# Do not move the robot until the light is green
 		while(self.light == True):

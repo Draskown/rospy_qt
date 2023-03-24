@@ -21,6 +21,7 @@ class BarControl():
 		self.error = 0
 		self.target_orientation = 0.7
 		self.target_position = {'x': -1.828144623628639, 'y': 1.352652814982841}
+		self.msg = String()
 
 		self.plan = True
 		self.state = ""
@@ -31,8 +32,9 @@ class BarControl():
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
 		sub_ts = rospy.Subscriber('state', String, self.cb_ts, queue_size=1)
 
-		# Publisher for a ROS topic
+		# Publisher for ROS topics
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
 
 		# Move endlessly until flag 'crunches' is True
 		while not rospy.is_shutdown():
@@ -42,6 +44,7 @@ class BarControl():
 						self.do_stop()
 						break
 				else:
+					rospy.signal_shutdown('force edning')
 					break
 			except KeyboardInterrupt:
 				break
@@ -90,7 +93,8 @@ class BarControl():
 		rospy.sleep(0.1)
 		pub_line_move.publish(flag_move_line)
 		
-		print('moving forward')
+		self.msg.data = 'Moving forward \r\n'
+		self.pub_msg.publish(self.msg)
 		
 		# If robot has not yet arrived at desired location
 		while not (abs(self.pose_x + 1.75) < 0.15 and self.pose_y < 1):
@@ -104,7 +108,7 @@ class BarControl():
 		# Stop the robot
 		self.pubvel(0.0, 0.0, 0.1)
 		
-		print('waiting for the bar to open')
+		self.pub_msg.publish('Waiting for the bar to open \r\n')
 		# Wait for the bar to open
 		while self.stop_bar:
 			if self.state == "8":

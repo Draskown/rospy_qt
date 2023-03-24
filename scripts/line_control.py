@@ -30,6 +30,7 @@ class LineControl():
 				if self.plan:
 					rospy.sleep(0.1)
 				else:
+					rospy.signal_shutdown('force ending')
 					break
 			except KeyboardInterrupt:
 				break

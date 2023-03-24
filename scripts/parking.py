@@ -21,9 +21,10 @@ class Parking():
 		sub_scan = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
 
-		# Set a publisher for robot's velocity and moving along the line flag
+		# Set a publisher for robot's velocity, moving along the line flag and to public log messages
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_line_move = rospy.Publisher('line_move_flag', Bool, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
 
 		# While ROS is not shut down and if parking flag is true
 		# Perform parking
@@ -31,17 +32,18 @@ class Parking():
 			try:
 				if self.plan:
 					if(self.parking == True):
-						print("start parking mission")
+						self.pub_msg.publish("Start parking mission\r\n")
 						rospy.sleep(6.3)
 						#print(self.distance)
 						if(self.distance > 1 or self.distance == 0):
 							self.do_parking()
 						else:
-							print("place is occupied")
+							self.pub_msg.publish("Place is occupied\r\n")
 							rospy.sleep(1.5)
 							self.do_parking()
 						break
 				else:
+						rospy.signal_shutdown('force ending')
 						break
 			except KeyboardInterrupt:
 				break

@@ -53,8 +53,7 @@ class LidarWidget(QWidget):
         cam_sub = rospy.Subscriber("scan_img", Image, self.cb_lidar, queue_size=1)  
     
     def cb_lidar(self, data):
-        cv_img = self.cvBridge.imgmsg_to_cv2(data, "8UC1")
-        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_GRAY2RGB)
+        cv_img = self.cvBridge.imgmsg_to_cv2(data, "rgb8")
         h, w, ch = cv_img.shape
         bpl = ch*w
         qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)

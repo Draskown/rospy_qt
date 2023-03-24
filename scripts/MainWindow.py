@@ -4,7 +4,6 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 from cv_bridge import CvBridge
 
-from PyQt5.Qt import Qt
 from PyQt5.QtGui import (QPalette,
                          QColor,
                          QPixmap,
@@ -17,17 +16,17 @@ from PyQt5.QtWidgets import (QApplication,
                              QWidget,
                              QHBoxLayout,
                              QVBoxLayout,
-                             QMessageBox,
-                             QStatusBar)
+                             QMessageBox,)
 from PyQt5.QtCore import (QThread,
                           QObject,
                           pyqtSignal,
-                          QTimer)
+                          Qt)
 
 from CameraDebugWidget import CameraDebugWidget
 from LidarWidget import LidarWidget
 from LocationInfoWidget import LocationInfoWidget
 from ManualMovementWidget import ManualMovementWidget
+from LogWidget import LogWidget
 from Common_defs import set_icon, key_pressed
 
 
@@ -52,8 +51,8 @@ class MainWindow(QMainWindow):
         self.camera_debug_widget = CameraDebugWidget()
         self.lidar_widget = LidarWidget()
         self.location_info_widget = LocationInfoWidget()
-
         self.manual_movement_widget = ManualMovementWidget()
+        self.log_widget = LogWidget()
 
         # Create layout for central widget
         main_layout = QHBoxLayout()
@@ -75,14 +74,19 @@ class MainWindow(QMainWindow):
 
         # Create Start Mission button
         self.start_mission_button = QPushButton('Start Mission')
+
+        # Create Open log button
+        self.open_log = QPushButton('Log')
         
         # Init the status bar thread
         self.worker = Worker()
         self.worker.message.connect(self.statusBar().showMessage)
 
+        # Move it to a thread
         self.thread = QThread(self)
         self.worker.moveToThread(self.thread)
 
+        # Connect the message from worker to the thread
         self.thread.started.connect(self.worker.show_message)
         self.thread.start()
         
@@ -104,6 +108,7 @@ class MainWindow(QMainWindow):
         column3.addWidget(location_info_button, Qt.AlignTop)
         column3.addWidget(self.manual_movement_button, Qt.AlignTop)
         column3.addStretch()
+        column3.addWidget(self.open_log, Qt.AlignBottom)
 
         # Add those columns into the HLayout
         main_layout.addLayout(column1)
@@ -118,6 +123,7 @@ class MainWindow(QMainWindow):
         lidar_button.clicked.connect(self.show_lidar_widget)
         location_info_button.clicked.connect(self.show_location_info_widget)
         self.manual_movement_button.clicked.connect(self.show_manual_movement_widget)
+        self.open_log.clicked.connect(self.show_log_wdiget)
         
         self.start_mission_button.clicked.connect(self.start_mission)
 
@@ -174,6 +180,9 @@ class MainWindow(QMainWindow):
 
     def show_manual_movement_widget(self):
         self.manual_movement_widget.show()
+
+    def show_log_wdiget(self):
+        self.log_widget.show()
 
     def cb_cam(self, img):
         cv_img = self.cvBridge.imgmsg_to_cv2(img,"rgb8")

@@ -2,7 +2,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
-from PyQt5.Qt import Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QWidget,
                              QLabel,
                              QVBoxLayout,
