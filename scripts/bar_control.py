@@ -5,7 +5,7 @@
 # needed imports
 import rospy
 from time import sleep
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, String, Float64
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 
@@ -22,6 +22,7 @@ class BarControl():
 		self.target_orientation = 0.7
 		self.target_position = {'x': -1.828144623628639, 'y': 1.352652814982841}
 		self.msg = String()
+		self.correction = Float64()
 
 		self.plan = True
 		self.state = ""
@@ -35,6 +36,7 @@ class BarControl():
 		# Publisher for ROS topics
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+		self.pub_dir_cor = rospy.Publisher('cor_dir', Float64, queue_size=1)
 
 		# Move endlessly until flag 'crunches' is True
 		while not rospy.is_shutdown():
@@ -121,6 +123,8 @@ class BarControl():
 		while self.pose_y > 0:
 			self.error = self.target_orientation - abs(self.orientation)
 			self.pubvel(0.2, -self.error*5, 0.1)
+			self.correction.data = self.error
+			self.pub_dir_cor(self.correction)
 	
 
 if __name__ == '__main__':

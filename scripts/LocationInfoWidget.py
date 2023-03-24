@@ -18,7 +18,6 @@ class LocationInfoWidget(QWidget):
 
         # init global variables
         self.position = [0.0, 0.0]
-        self.direction = 0.0
 
         self.initUI()
 
@@ -28,6 +27,8 @@ class LocationInfoWidget(QWidget):
         direction_sub = rospy.Subscriber('direction', Float64, self.set_dir, queue_size=1)
         enc_r_sub = rospy.Subscriber('enc_r', Float64, self.set_right, queue_size=1)
         enc_l_sub = rospy.Subscriber('enc_l', Float64, self.set_left, queue_size=1)
+        pub_cor_sub = rospy.Subscriber('cor_pos', Float64, self.set_cor_pos, queue_size=1)
+        dir_cor_sub = rospy.Subscriber('cor_dir', Float64, self.set_cor_dir, queue_size=1)
 
         # Set ROS Publishers
         self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
@@ -187,3 +188,14 @@ class LocationInfoWidget(QWidget):
     def set_right(self, data):
         label_text = str(round(data.data, 3))
         self.right_encoder.setText(label_text)
+
+    # Listens for the correction of the position
+    def set_cor_pos(self, data):
+        label_text = str(round(data.data, 3))
+        self.correction_of_position_output.setText(label_text)
+
+    # Listens for the correction of the direction
+    def set_cor_dir(self, data):
+        label_text = str(round(data.data, 3))
+        self.correction_of_direction_output.setText(label_text)
+

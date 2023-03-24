@@ -29,12 +29,14 @@ class OdomCalculator():
 		self.log_msg = String()
 		self.closest_ten = 2
 		self.k = 0
+		self.correction = Float64()
 
 		# Set publishers for the custom odometry calculation, plan's state
 		# And to publish the log messages
 		self.odom_pub = rospy.Publisher('codom', Float64, queue_size=1)
 		self.plan_pub = rospy.Publisher('plan', Bool, queue_size=1)
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+		self.pub_pos_cor = rospy.Publisher('cor_pos', Float64, queue_size=1)
 
 		# Set subscribers for the ROS topics
 		cmd_sub = rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
@@ -92,6 +94,8 @@ class OdomCalculator():
 			self.msg = "Traffic light is not here"
 		# If the robot is - correct the position of the robot
 		if data.data != "none" and self.x.data <= 0.3:
+			self.correction.data = abs(self.x.data - 0.2)
+			self.pub_pos_cor.publish(self.correction)
 			self.x.data = 0.2
 
 	# Listens for the parking sign's state
@@ -102,6 +106,8 @@ class OdomCalculator():
 			self.msg = "Parking is not here"
 		# If the robot is - correct the position of the robot
 		if data.data != "none" and self.x.data <= 1.95 and self.x.data > 1.6:
+			self.correction.data = abs(self.x.data - 1.83)
+			self.pub_pos_cor.publish(self.correction)
 			self.x.data = 1.83
 
 	# Listens for the bar's state
@@ -112,6 +118,8 @@ class OdomCalculator():
 			self.msg = "Bar is not here"
 		# If the robot is - correct the position of the robot
 		if data.data != "none" and self.x.data <= 3.01 and self.x.data > 2.9:
+			self.correction.data = abs(self.x.data - 3.0)
+			self.pub_pos_cor.publish(self.correction)
 			self.x.data = 3.00
 	
 	# Publishes the plan's state
