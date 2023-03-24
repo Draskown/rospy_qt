@@ -4,7 +4,7 @@
 # Needed imports
 import rospy, cv2, os, select, sys, tty, termios
 import cv2, numpy as np
-from std_msgs.msg import String, Bool
+from std_msgs.msg import String, Bool, Int8
 from sensor_msgs.msg import Image, LaserScan
 from cv_bridge import CvBridge
 
@@ -16,13 +16,14 @@ class Xlidarcontrol():
 
 		# Initializing of global values
 		self.plan = True
-		self.mode = 1
+		self.front_mode = 1
 		self.angle = 0
 		self.closest = 0.75
 		self.cvBridge = CvBridge()
 		self.sign_text = "none"
 		self.bar_text = "none"
 		self.tl_text = "none"
+		self.show_env = False
 		
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
 
@@ -36,6 +37,8 @@ class Xlidarcontrol():
 		camera_sub = rospy.Subscriber('camera/image', Image, self.cb_cam, queue_size=1)
 		scan_sub = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
 		plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
+		front_cam_sub = rospy.Subscriber('front_camera_mode', Int8, self.cb_front_mode, queue_size=1)
+		show_env_sub = rospy.Subscriber('show_env', Bool, self.cb_switch_env, queue_size=1)
 		
 		# Set publishers for the image and lidar's data
 		self.img_pub = rospy.Publisher('decided_img', Image, queue_size=1)
@@ -64,7 +67,7 @@ class Xlidarcontrol():
 	# Listens for the image
 	def cb_cam(self, image):
 		try:
-			if self.mode == 1:
+			if self.front_mode == 1:
 				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
@@ -72,7 +75,7 @@ class Xlidarcontrol():
 	# Listens for the traffic light image
 	def cb_tl_img(self, image):
 		try:
-			if self.mode == 2:
+			if self.front_mode == 2:
 				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
@@ -80,7 +83,7 @@ class Xlidarcontrol():
 	# Listens for the bar image
 	def cb_bar_img(self, image):
 		try:
-			if self.mode == 3:
+			if self.front_mode == 3:
 				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
@@ -88,7 +91,7 @@ class Xlidarcontrol():
 	# Listens for the signs image
 	def cb_sign_img(self, image):
 		try:
-			if self.mode == 4:
+			if self.front_mode == 4:
 				self.pub_image(image, "rgb8")
 		except AttributeError:
 			return
@@ -133,96 +136,75 @@ class Xlidarcontrol():
 	
 	# Publish the image in selected mode
 	def pub_image(self, img, encoding):		
-		seen_object = "none"
-		if self.sign_text != "none" and self.bar_text == "none" and self.tl_text == "none":
-			seen_object = self.sign_text
-		elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
-			seen_object = self.bar_text
-		elif self.sign_text == "none" and self.bar_text == "none" and self.tl_text != "none":
-			seen_object = self.tl_text
-		elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text == "none":
-			seen_object = self.bar_text
-		elif self.sign_text != "none" and self.bar_text == "none" and self.tl_text != "none":
-			seen_object = self.tl_text
-		elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
-			seen_object = self.bar_text
-		elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text != "none":
-			seen_object = self.bar_text
-			
-		# Put a text to the image
-		cv_image = self.cvBridge.imgmsg_to_cv2(img)
-		cv_image = cv2.putText(cv_image, 
-			 					seen_object,
-								(3, 18),
-								cv2.FONT_HERSHEY_SIMPLEX,
-								0.75,
-								(255, 0, 155),
-								1,
-								2)
-		
-		# Put the distance to the sign
-		if seen_object != "none" and seen_object != "traffic light":	
-			text = "distance: {} cm".format(int(self.closest*125))
-			
+		if self.show_env:
+			seen_object = "none"
+			if self.sign_text != "none" and self.bar_text == "none" and self.tl_text == "none":
+				seen_object = self.sign_text
+			elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
+				seen_object = self.bar_text
+			elif self.sign_text == "none" and self.bar_text == "none" and self.tl_text != "none":
+				seen_object = self.tl_text
+			elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text == "none":
+				seen_object = self.bar_text
+			elif self.sign_text != "none" and self.bar_text == "none" and self.tl_text != "none":
+				seen_object = self.tl_text
+			elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
+				seen_object = self.bar_text
+			elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text != "none":
+				seen_object = self.bar_text
+				
+			# Put text to the image
+			cv_image = self.cvBridge.imgmsg_to_cv2(img)
 			cv_image = cv2.putText(cv_image, 
-			  						text,
-									(3, 34),
+									seen_object,
+									(3, 18),
 									cv2.FONT_HERSHEY_SIMPLEX,
-									0.4,
+									0.75,
 									(255, 0, 155),
 									1,
 									2)
-															
-			text = "angle: {}".format(self.angle)
 			
-			cv_image = cv2.putText(cv_image, 
-			  						text,
-									(3, 44),
-									cv2.FONT_HERSHEY_SIMPLEX,
-									0.4,
-									(255, 0, 155),
-									1,
-									2)
-		
-		# Publish the image with text
-		self.img_pub.publish(self.cvBridge.cv2_to_imgmsg(cv_image, encoding))
-	
-	# Gets the pressed key in the terminal
-	def getKey(self):
-		if os.name == 'nt':
-			if sys.version_info[0] >= 3:
-				return msvcrt.getch().decode()
-			else:
-				return msvcrt.getch()
-
-		tty.setraw(sys.stdin.fileno())
-		rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-		if rlist:
-			key = sys.stdin.read(1)
+			# Put the distance to the sign
+			if seen_object != "none" and seen_object != "traffic light":	
+				text = "distance: {} cm".format(int(self.closest*125))
+				
+				cv_image = cv2.putText(cv_image, 
+										text,
+										(3, 34),
+										cv2.FONT_HERSHEY_SIMPLEX,
+										0.4,
+										(255, 0, 155),
+										1,
+										2)
+																
+				text = "angle: {}".format(self.angle)
+				
+				cv_image = cv2.putText(cv_image, 
+										text,
+										(3, 44),
+										cv2.FONT_HERSHEY_SIMPLEX,
+										0.4,
+										(255, 0, 155),
+										1,
+										2)
+			
+			# Publish the image with text
+			self.img_pub.publish(self.cvBridge.cv2_to_imgmsg(cv_image, encoding))
 		else:
-			key = ''
-
-		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
-		return key
+			self.img_pub.publish(img)
 	
-	# Set the mode based on the pressed key
+	# Set the mode based on the passed data
+	def cb_front_mode(self, data):
+		self.front_mode = data.data
+
+	# Set if info on the image needs to be outputted
+	def cb_switch_env(self, data):
+		self.show_env = data.data
+	
 	def main(self):
 		if not self.plan:
 			rospy.signal_shutdown('force ending')
 			return
-	
-		key = self.getKey()
-		
-		if key == "\x03":
-			exit(0)
-		elif key == "1":
-			self.mode = 1
-		elif key == "2":
-			self.mode = 2
-		elif key == "3":
-			self.mode = 3
-		elif key == "4":
-			self.mode = 4
 
 
 if __name__ == '__main__':

@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # Needed imports
-import rospy
-import numpy as np
-import cv2
-from sensor_msgs.msg import Image, CompressedImage
+import rospy, cv2, numpy as np
+from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from time import sleep
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Bool, Int8
 
 
 # Masks the image with yellow
@@ -30,6 +28,7 @@ def mask_yellow(img):
 	mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
 	# Bitwise-AND mask and original image
+	mask_res = cv2.bitwise_and(img, img, mask = mask)
 	res = cv2.bitwise_and(img, img, mask = mask)
 	fraction_num = np.count_nonzero(mask)
 	
@@ -60,7 +59,7 @@ def mask_yellow(img):
 				res = cv2.line(res, (point[0], point[1]), (point_before[0],point_before[1]), (0,0,255),8)
 				point_before = point
 				
-	return res, point_arr
+	return res, point_arr, mask_res
 
 # Same as 'mask_yellow'
 def mask_white(img):
@@ -81,6 +80,7 @@ def mask_white(img):
 		mask = cv2.inRange(hsv, lower_white, upper_white)
 
 		# Bitwise-AND mask and original image
+		res_mask = cv2.bitwise_and(img, img, mask = mask)
 		res = cv2.bitwise_and(img, img, mask = mask)
 		fraction_num = np.count_nonzero(mask)
 
@@ -111,7 +111,7 @@ def mask_white(img):
 					res = cv2.line(res, (point[0], point[1]), (point_before[0],point_before[1]), (0,0,255),8)
 					point_before = point
 				
-		return res, point_arr
+		return res, point_arr, res_mask
 
 # Calculates the error between the lines
 def calculate_error(yellow_array, white_array):
@@ -145,6 +145,9 @@ class LineDetect():
 		# Initializing of global variables
 		self.cvBridge = CvBridge()
 		self.plan = True
+		self.mode = 1
+		self.show_perspective = False
+		self.show_detection = False
 
 		# Set publishers for image and for the error
 		self.pub_image = rospy.Publisher('image', Image, queue_size=1)
@@ -153,6 +156,9 @@ class LineDetect():
 		# Set subscribers for ROS topics
 		sub_image = rospy.Subscriber('/camera_line/image', Image, self.cbImageProjection, queue_size = 1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
+		line_sub = rospy.Subscriber('line_camera_mode', Int8, self.cb_mode, queue_size=1)
+		show_detection_sub = rospy.Subscriber('show_line_det', Bool, self.cb_show_detection, queue_size=1)
+		show_perspective_sub = rospy.Subscriber('show_persp', Bool, self.cb_show_perspective, queue_size=1)
 
 		# Do every subscriber's method until ros is shut down
 		while not rospy.is_shutdown():
@@ -175,23 +181,45 @@ class LineDetect():
 	def cbImageProjection(self, data):
 		# Get and prepare the original camera's image
 		cv_image_original = self.cvBridge.imgmsg_to_cv2(data, "bgr8")	
-		cv_image_original = cv2.GaussianBlur(cv_image_original, (5, 5), 0)
+		cv_image_blur = cv2.GaussianBlur(cv_image_original, (5, 5), 0)
 		
+		if self.show_perspective:
+			pass
+
 		# Mask the image with white and yellow
-		yellow_detect, yellow_array = mask_yellow(cv_image_original)
-		white_detect, white_array = mask_white(cv_image_original)
+		yellow_detect, yellow_array, yellow_mask = mask_yellow(cv_image_blur)
+		white_detect, white_array, white_mask = mask_white(cv_image_blur)
 
 		# Add detected values onto the image
-		detected = cv2.add(white_detect, yellow_detect)
+		if self.mode == 1:
+			detected = cv_image_original.copy()
+			if self.show_detection:
+				detected = cv2.add(white_detect, yellow_detect)
+		elif self.mode == 2:
+			detected = white_mask.copy()
+			if self.show_detection:
+				detected = white_detect.copy()
+		elif self.mode == 3:
+			detected = yellow_mask.copy()
+			if self.show_detection:
+				detected = yellow_detect.copy()
 
-		# Publish the image into the topic
+		# Publish the image into the topic		
 		self.pub_image.publish(self.cvBridge.cv2_to_imgmsg(detected, "bgr8"))
-		
+
 		# Generate and publish the calcualated error from the lines
 		error = Float64()
 		error.data = calculate_error(yellow_array, white_array)
 		self.pub_error.publish(error)
 
+	def cb_mode(self, data):
+		self.mode = data.data
+
+	def cb_show_perspective(self, data):
+		self.show_perspective = data.data
+
+	def cb_show_detection(self, data):
+		self.show_detection = data.data
 
 if __name__ == '__main__':
 	rospy.init_node('image_projection')
