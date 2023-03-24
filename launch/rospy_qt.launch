@@ -1,16 +1,10 @@
 <launch>
 	
 	<node pkg="rospy_qt" name="bar_control" type="bar_control.py" output="screen"/>
-	<node pkg="rospy_qt" name="bar_detect" type="bar_detect.py" output="screen"/>
 	<node pkg="rospy_qt" name="light_controller" type="light_controller.py" output="screen"/>
 	<node pkg="rospy_qt" name="line_control" type="line_control.py" output="screen"/>
-	<node pkg="rospy_qt" name="line_detect" type="line_detect.py" output="screen"/>
 	<node pkg="rospy_qt" type="mission_control.py" name="mission_control" output="screen" />
 	<node pkg="rospy_qt" name="odometry" type="odom.py" output="screen"/>
 	<node pkg="rospy_qt" name="parking" type="parking.py" output="screen"/>	
-	<node pkg="rospy_qt" name="sign_detect" type="sign_detect.py" output="screen"/>
-	<node pkg="rospy_qt" name="traffic_light_detect" type="traffic_light_detector.py"/>
 	<node pkg="rospy_qt" name="tunnel_start" type="tunnel_start.py" output="screen"/>
-	<node pkg="rospy_qt" name="xlidarcontrol" type="xlidarcontrol.py" output="screen"/>
-	<node pkg="rospy_qt" name="encoders" type="encoders.py" output="screen"/>
 </launch>

@@ -36,6 +36,23 @@ class MainWindow(QMainWindow):
 
         self.init_UI()
 
+        # An object of image conversion
+        self.cvBridge = CvBridge()
+        
+        # Launch the main file that has only nodes for detection
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["/root/ros_workspace/src/rospy_qt/launch/Main.launch"])
+        self.launch.start()
+
+        # ROS topic subscribers
+        camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
+        plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
+        log_sub = rospy.Subscriber('log_msg', String, self.cb_log, queue_size=1)
+        
+		# Set a publisher for the robot's velocity
+        self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+
     def init_UI(self):       
         # Set window title
         self.setWindowTitle('Main Window')
@@ -124,19 +141,7 @@ class MainWindow(QMainWindow):
         location_info_button.clicked.connect(self.show_location_info_widget)
         self.manual_movement_button.clicked.connect(self.show_manual_movement_widget)
         self.open_log.clicked.connect(self.show_log_wdiget)
-        
         self.start_mission_button.clicked.connect(self.start_mission)
-
-        # An object of image conversion
-        self.cvBridge = CvBridge()
-        
-        # ROS topic subscribers
-        camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
-        plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
-        log_sub = rospy.Subscriber('log_msg', String, self.cb_log, queue_size=1)
-        
-		# Set a publisher for the robot's velocity
-        self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 
 
     # Events
@@ -154,6 +159,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             e.accept()
+            self.launch.shutdown()
             for win in QApplication.topLevelWidgets():
                 win.close()
         else: e.ignore()
