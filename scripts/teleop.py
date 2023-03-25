@@ -3,51 +3,12 @@
 
 import rospy
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 import sys, select, os
 if os.name == 'nt':
 	import msvcrt
 else:
 	import tty, termios
-
-BURGER_MAX_LIN_VEL = 0.5
-BURGER_MAX_ANG_VEL = 5
-
-WAFFLE_MAX_LIN_VEL = 0.26
-WAFFLE_MAX_ANG_VEL = 1.82
-
-LIN_VEL_STEP_SIZE = 0.03
-ANG_VEL_STEP_SIZE = 5
-
-msg = """
-Moving around:
-     w
-a    s    d
-
-space key: force stop
-
-CTRL-C to quit
-"""
-
-e = """
-Communications Failed
-"""
-
-def getKey():
-	if os.name == 'nt':
-		if sys.version_info[0] >= 3:
-			return msvcrt.getch().decode()
-		else:
-			return msvcrt.getch()
-
-	tty.setraw(sys.stdin.fileno())
-	rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-	if rlist:
-		key = sys.stdin.read(1)
-	else:
-		key = ''
-
-	termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-	return key
 
 
 def makeSimpleProfile(output, input, slop):
@@ -72,26 +33,97 @@ def constrain(input, low, high):
 	return input
 
 
-def checkLinearLimitVelocity(vel):
-	if turtlebot3_model == "burger":
-		vel = constrain(vel, -BURGER_MAX_LIN_VEL, BURGER_MAX_LIN_VEL)
-	elif turtlebot3_model == "waffle" or turtlebot3_model == "waffle_pi":
-		vel = constrain(vel, -WAFFLE_MAX_LIN_VEL, WAFFLE_MAX_LIN_VEL)
-	else:
-		vel = constrain(vel, -BURGER_MAX_LIN_VEL, BURGER_MAX_LIN_VEL)
+class Teleop():
+	def __init__(self):
+		self.max_lin_vel = 0.5
+		self.max_ang_vel = 5
+		self.lin_vel_step = 0.005
+		self.ang_vel_step = 0.5
 
-	return vel
+		self.e = """
+		Communications Failed
+		"""
 
+		self.key = " "
 
-def checkAngularLimitVelocity(vel):
-	if turtlebot3_model == "burger":
-		vel = constrain(vel, -BURGER_MAX_ANG_VEL, BURGER_MAX_ANG_VEL)
-	elif turtlebot3_model == "waffle" or turtlebot3_model == "waffle_pi":
-		vel = constrain(vel, -WAFFLE_MAX_ANG_VEL, WAFFLE_MAX_ANG_VEL)
-	else:
-		vel = constrain(vel, -BURGER_MAX_ANG_VEL, BURGER_MAX_ANG_VEL)
+		self.target_linear_vel   = 0.0
+		self.target_angular_vel  = 0.0
+		self.control_linear_vel  = 0.0
+		self.control_angular_vel = 0.0
 
-	return vel
+		self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+
+		btn_sub = rospy.Subscriber('teleop_btn', String, self.cb_btn, queue_size=1)
+
+		self.main()
+
+	def cb_btn(self, data):
+		self.key = data.data
+
+	def checkLinearLimitVelocity(self, vel):
+			return constrain(vel, -self.max_lin_vel, self.max_lin_vel)
+
+	def checkAngularLimitVelocity(self, vel):
+			return constrain(vel, -self.max_ang_vel, self.max_ang_vel)
+	
+	def main(self):
+		try:
+			while not rospy.is_shutdown():
+				target_angular_vel = 0.0
+				
+				if self.key == 'w' :
+					if target_linear_vel >= 0.0:
+						target_linear_vel = self.checkLinearLimitVelocity(target_linear_vel + self.lin_vel_step)
+					else:
+						target_linear_vel = 0.0
+				
+				elif self.key == 's':
+					if target_linear_vel <= 0.0:
+						target_linear_vel = self.checkLinearLimitVelocity(target_linear_vel - self.lin_vel_step)
+					else:
+						target_linear_vel = 0.0
+				
+				elif self.key == 'a':
+					if target_angular_vel >= 0.0:
+						target_angular_vel = self.checkAngularLimitVelocity(target_angular_vel + self.ang_vel_step)
+					else:
+						target_angular_vel = 0.0
+				
+				elif self.key == 'd':
+					if target_angular_vel <= 0.0:
+						target_angular_vel = self.checkAngularLimitVelocity(target_angular_vel - self.ang_vel_step)
+					else:
+						target_angular_vel = 0.0
+				
+				elif self.key == 's_r':
+					target_angular_vel  = 0.0
+					control_angular_vel = 0.0
+
+				elif self.key == ' ':
+					target_linear_vel   = 0.0
+					control_linear_vel  = 0.0
+					target_angular_vel  = 0.0
+					control_angular_vel = 0.0
+
+				twist = Twist()
+
+				control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (self.lin_vel_step/2.0))
+				twist.linear.x = control_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
+
+				control_angular_vel = makeSimpleProfile(control_angular_vel, target_angular_vel, (self.ang_vel_step/2.0))
+				twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = control_angular_vel
+
+				self.pub.publish(twist)
+
+		except:
+			self.pub_msg.publish(self.e)
+
+		finally:
+			twist = Twist()
+			twist.linear.x = 0.0; twist.linear.y = 0.0; twist.linear.z = 0.0
+			twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = 0.0
+			self.pub.publish(twist)
 
 
 if __name__=="__main__":
@@ -99,74 +131,11 @@ if __name__=="__main__":
 		settings = termios.tcgetattr(sys.stdin)
 
 	rospy.init_node('turtlebot3_teleop')
-	pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-
-	turtlebot3_model = rospy.get_param("model", "burger")
-
-	target_linear_vel   = 0.0
-	target_angular_vel  = 0.0
-	control_linear_vel  = 0.0
-	control_angular_vel = 0.0
 
 	try:
-		print(msg)
-		while(1):
-		
-			target_angular_vel = 0.0
-		
-			key = getKey()
-			
-			if key == 'w' :
-				if target_linear_vel >= 0.0:
-					target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
-				else:
-					target_linear_vel = 0.0
-			
-			elif key == 's':
-				if target_linear_vel <= 0.0:
-					target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
-				else:
-					target_linear_vel = 0.0
-			
-			elif key == 'a':
-				if target_angular_vel >= 0.0:
-					target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
-				else:
-					target_angular_vel = 0.0
-			
-			elif key == 'd':
-				if target_angular_vel <= 0.0:
-					target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
-				else:
-					target_angular_vel = 0.0
-			
-			elif key == ' ':
-				target_linear_vel   = 0.0
-				control_linear_vel  = 0.0
-				target_angular_vel  = 0.0
-				control_angular_vel = 0.0
-			else:
-				if (key == '\x03'):
-					break
-
-			twist = Twist()
-
-			control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
-			twist.linear.x = control_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
-
-			control_angular_vel = makeSimpleProfile(control_angular_vel, target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
-			twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = control_angular_vel
-
-			pub.publish(twist)
-
-	except:
-		print(e)
-
-	finally:
-		twist = Twist()
-		twist.linear.x = 0.0; twist.linear.y = 0.0; twist.linear.z = 0.0
-		twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = 0.0
-		pub.publish(twist)
+		node = Teleop()
+	except rospy.ROSInterruptException:
+		pass
 
 	if os.name != 'nt':
 		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)

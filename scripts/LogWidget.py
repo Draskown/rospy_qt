@@ -19,6 +19,11 @@ class LogWidget(QWidget):
 
         self.log = ""
 
+        # CV converter
+        self.cvBridge = CvBridge()       
+        # A subscriber for a ROS topic
+        log_sub = rospy.Subscriber("log_msg", String, self.put_log, queue_size=1)  
+
     # Events
     def keyPressEvent(self, e):
         key_pressed(self, e)
@@ -52,11 +57,6 @@ class LogWidget(QWidget):
 
         # Set layout for widget
         self.setLayout(layout)
-
-        # CV converter
-        self.cvBridge = CvBridge()       
-        # A subscriber for a ROS topic
-        log_sub = rospy.Subscriber("log_msg", String, self.put_log, queue_size=1)  
     
     def put_log(self, data):
         if data.data != "":

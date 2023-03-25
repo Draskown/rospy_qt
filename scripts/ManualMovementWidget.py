@@ -1,3 +1,5 @@
+import rospy
+from std_msgs.msg import String
 from PyQt5.QtWidgets import (QWidget,
                              QPushButton,
                              QGridLayout,
@@ -10,6 +12,8 @@ class ManualMovementWidget(QWidget):
         super().__init__()
 
         self.init_UI()
+
+        self.btn_pub = rospy.Publisher('teleop_btn', String, queue_size=1)
 
     # Events
     def keyPressEvent(self, e):
@@ -37,6 +41,14 @@ class ManualMovementWidget(QWidget):
         turn_right_button = QPushButton('Turn Right')
         backward_button = QPushButton('Backward')
 
+        # Connect buttons
+        forward_button.clicked.connect(lambda: self.btn_pushed("w"))
+        turn_left_button.clicked.connect(lambda: self.btn_pushed("a"))
+        stop_rotation_button.clicked.connect(lambda: self.btn_pushed("s_r"))
+        stop_button.clicked.connect(lambda: self.btn_pushed(" "))
+        turn_right_button.clicked.connect(lambda: self.btn_pushed("d"))
+        backward_button.clicked.connect(lambda: self.btn_pushed("s"))
+
         # Create grid layout
         grid = QGridLayout()
 
@@ -50,3 +62,7 @@ class ManualMovementWidget(QWidget):
 
         # Set layout for widget
         self.setLayout(grid)
+
+    
+    def btn_pushed(self, btn):
+        self.btn_pub.publish(btn)
