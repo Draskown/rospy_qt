@@ -52,6 +52,8 @@ class TunnelStart():
 					elif self.in_tunnel:
 						self.in_tunnel_go()
 				else:
+					self.log_msg.data = "Finished the mission\r\n"
+					self.pub_msg.publish(self.log_msg)
 					rospy.signal_shutdown('force ending')
 					break
 			except KeyboardInterrupt:

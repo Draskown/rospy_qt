@@ -118,23 +118,23 @@ class Xlidarcontrol():
 				else:
 					self.angle = i+1
 			
-			# Draw every fifth ray
-			if i%5 != 0:
+			#Draw every third ray
+			if i%3 != 0:
 				if data.ranges[i] < closest_ten:
 					closest_ten = data.ranges[i]
 			else:
 				if closest_ten != 2:
 					x = int(closest_ten*np.cos((i + 180)*np.pi/180)*100 + 200)
 					y = int(closest_ten*np.sin((i + 180)*np.pi/180)*100 + 200)
-				
-					self.empty_image[x, y] = 255
+
+					self.empty_image[x-1, y-1] = 255
 					closest_ten = 2
 		
 		# Publish the lidar's image and update the empty image
 		cv_image_rgb = cv2.cvtColor(self.empty_image, cv2.COLOR_GRAY2RGB)
 
-		if self.seen_object == "parking":
-			pass
+		center = [200, 200]
+		cv2.circle(cv_image_rgb, center, 5, (255, 255, 255), -1)
 
 		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(cv_image_rgb, "rgb8"))
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
