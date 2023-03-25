@@ -24,6 +24,7 @@ class Xlidarcontrol():
 		self.bar_text = "none"
 		self.tl_text = "none"
 		self.show_env = False
+		self.seen_object = "none"
 		
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
 
@@ -131,32 +132,37 @@ class Xlidarcontrol():
 		
 		# Publish the lidar's image and update the empty image
 		cv_image_rgb = cv2.cvtColor(self.empty_image, cv2.COLOR_GRAY2RGB)
+
+		if self.seen_object == "parking":
+			pass
+
 		self.scan_pub.publish(self.cvBridge.cv2_to_imgmsg(cv_image_rgb, "rgb8"))
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
 	
 	# Publish the image in selected mode
 	def pub_image(self, img, encoding):		
 		if self.show_env:
-			seen_object = "none"
+			self.seen_object = "none"
+
 			if self.sign_text != "none" and self.bar_text == "none" and self.tl_text == "none":
-				seen_object = self.sign_text
+				self.seen_object = self.sign_text
 			elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
-				seen_object = self.bar_text
+				self.seen_object = self.bar_text
 			elif self.sign_text == "none" and self.bar_text == "none" and self.tl_text != "none":
-				seen_object = self.tl_text
+				self.seen_object = self.tl_text
 			elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text == "none":
-				seen_object = self.bar_text
+				self.seen_object = self.bar_text
 			elif self.sign_text != "none" and self.bar_text == "none" and self.tl_text != "none":
-				seen_object = self.tl_text
+				self.seen_object = self.tl_text
 			elif self.sign_text == "none" and self.bar_text != "none" and self.tl_text == "none":
-				seen_object = self.bar_text
+				self.seen_object = self.bar_text
 			elif self.sign_text != "none" and self.bar_text != "none" and self.tl_text != "none":
-				seen_object = self.bar_text
+				self.seen_object = self.bar_text
 				
 			# Put text to the image
 			cv_image = self.cvBridge.imgmsg_to_cv2(img)
 			cv_image = cv2.putText(cv_image, 
-									seen_object,
+									self.seen_object,
 									(3, 18),
 									cv2.FONT_HERSHEY_SIMPLEX,
 									0.75,
@@ -165,7 +171,7 @@ class Xlidarcontrol():
 									2)
 			
 			# Put the distance to the sign
-			if seen_object != "none" and seen_object != "traffic light":	
+			if self.seen_object != "none" and self.seen_object != "traffic light":	
 				text = "distance: {} cm".format(int(self.closest*125))
 				
 				cv_image = cv2.putText(cv_image, 

@@ -26,8 +26,7 @@ class CameraDebugWidget(QWidget):
         # CV converter
         self.cvBridge = CvBridge()       
 
-        # Subscribers for the ROS topics
-        cam_sub = rospy.Subscriber("/camera/image", Image, self.cb_cam, queue_size=1)    
+        # Subscribers for the ROS topics   
         front_cam_sub = rospy.Subscriber("decided_img", Image, self.cb_front, queue_size=1)
         line_cam_sub = rospy.Subscriber("image", Image, self.cb_line, queue_size=1)
 
@@ -114,23 +113,13 @@ class CameraDebugWidget(QWidget):
         p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
         self.cam_line_label.setPixmap(p)
 
-    def cb_cam(self, data):
-        if self.front_camera_combo.currentIndex() == 0:
-            cv_img = self.cvBridge.imgmsg_to_cv2(data,"rgb8")
-            h, w, ch = cv_img.shape
-            bpl = ch*w
-            qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
-            p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
-            self.cam_label.setPixmap(p)
-
     def cb_front(self, data):
-        if self.front_camera_combo.currentIndex() > 0:
-            cv_img = self.cvBridge.imgmsg_to_cv2(data,"rgb8")
-            h, w, ch = cv_img.shape
-            bpl = ch*w
-            qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
-            p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
-            self.cam_label.setPixmap(p)
+        cv_img = self.cvBridge.imgmsg_to_cv2(data,"rgb8")
+        h, w, ch = cv_img.shape
+        bpl = ch*w
+        qimage = QImage(cv_img.data, w, h, bpl, QImage.Format_RGB888)
+        p = QPixmap.fromImage(qimage.scaled(int(640*0.75), int(640*0.75)))
+        self.cam_label.setPixmap(p)
 
     def send_front_mode(self):
         self.front_mode_pub.publish(self.front_camera_combo.currentIndex()+1)

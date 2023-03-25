@@ -180,11 +180,34 @@ class LineDetect():
 	# Listens for the original image
 	def cbImageProjection(self, data):
 		# Get and prepare the original camera's image
-		cv_image_original = self.cvBridge.imgmsg_to_cv2(data, "bgr8")	
-		cv_image_blur = cv2.GaussianBlur(cv_image_original, (5, 5), 0)
-		
+		cv_image_original = self.cvBridge.imgmsg_to_cv2(data, "bgr8")
+
+		persp_k = 45
+
 		if self.show_perspective:
-			pass
+			# Define the four corners of a trapezoid in the source image
+			src_corners = np.array([[persp_k, persp_k], 
+			   						[cv_image_original.shape[1]-persp_k, persp_k],
+									[cv_image_original.shape[1], cv_image_original.shape[0]],
+									[0, cv_image_original.shape[0]]],
+									dtype=np.float32)
+
+			# Define the four corners of a rectangle in the destination image
+			dst_corners = np.array([[0, 0], 
+			   						[cv_image_original.shape[1], 0],
+									[cv_image_original.shape[1], cv_image_original.shape[0]],
+									[0, cv_image_original.shape[0]]],
+									dtype=np.float32)
+
+			# Calculate the perspective transform matrix
+			M = cv2.getPerspectiveTransform(src_corners, dst_corners)
+
+			# Perform perspective correction
+			cv_image_original = cv2.warpPerspective(cv_image_original,
+													M,
+													(cv_image_original.shape[1], cv_image_original.shape[0]))
+
+		cv_image_blur = cv2.GaussianBlur(cv_image_original, (5, 5), 0)
 
 		# Mask the image with white and yellow
 		yellow_detect, yellow_array, yellow_mask = mask_yellow(cv_image_blur)
