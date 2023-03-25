@@ -47,7 +47,7 @@ class TunnelStart():
 					if(self.tunnel and not self.in_tunnel and self.bar == "none"):
 						self.log_msg.data = "Tunnel detected\r\n"
 						self.pub_msg.publish(self.log_msg)
-						rospy.sleep(3)
+						rospy.sleep(4)
 						self.in_tunnel = True
 					elif self.in_tunnel:
 						self.in_tunnel_go()

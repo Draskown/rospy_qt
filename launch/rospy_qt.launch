@@ -1,5 +1,4 @@
 <launch>
-	
 	<node pkg="rospy_qt" name="bar_control" type="bar_control.py" output="screen"/>
 	<node pkg="rospy_qt" name="light_controller" type="light_controller.py" output="screen"/>
 	<node pkg="rospy_qt" name="line_control" type="line_control.py" output="screen"/>

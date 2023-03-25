@@ -124,7 +124,7 @@ class BarControl():
 			self.error = self.target_orientation - abs(self.orientation)
 			self.pubvel(0.2, -self.error*5, 0.1)
 			self.correction.data = self.error
-			self.pub_dir_cor(self.correction)
+			self.pub_dir_cor.publish(self.correction)
 	
 
 if __name__ == '__main__':

@@ -54,7 +54,6 @@ class LineControl():
 			up = proportional+self.integral
 			velocity.angular.z = up
 			velocity.linear.x = 0.22 - 0.09*abs(up)
-			
 			self.pub_vel.publish(velocity)
 
 	# Listens for the flag whether moving along the line is enabled

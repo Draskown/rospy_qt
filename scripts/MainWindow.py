@@ -50,8 +50,8 @@ class MainWindow(QMainWindow):
         plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
         log_sub = rospy.Subscriber('log_msg', String, self.cb_log, queue_size=1)
         
-		# Set a publisher for the robot's velocity
-        self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+		# Set a publisher for the ROS topic
+        self.start_pub = rospy.Publisher('start_mission', Bool, queue_size=1)
 
     def init_UI(self):       
         # Set window title
@@ -176,11 +176,17 @@ class MainWindow(QMainWindow):
         self.manual_movement_button.setDisabled(True)
         self.location_info_widget.set_position_btn.setDisabled(True)
         self.location_info_widget.reset_position_btn.setDisabled(True)
+
+        self.start_pub.publish(True)
         
+        #self.launch.shutdown()
+
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         launch = roslaunch.parent.ROSLaunchParent(uuid, ["/root/ros_workspace/src/rospy_qt/launch/rospy_qt.launch"])
         launch.start()
+        
+        #self.start_pub.publish(True)
         
     def show_camera_debug_widget(self):
         self.camera_debug_widget.show()

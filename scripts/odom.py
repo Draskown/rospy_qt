@@ -55,7 +55,6 @@ class OdomCalculator():
 			rospy.sleep(0.1)
 			self.pubplan()
 		else:
-			print(self.msg)
 			self.log_msg.data = self.msg + "\r\n"
 			self.pub_msg.publish(self.log_msg)
 			self.pubplan()

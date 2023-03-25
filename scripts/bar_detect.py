@@ -44,7 +44,7 @@ class BarDetect():
 		# Initializing of global variables
 		self.cvBridge = CvBridge()
 		self.counter = 1
-		self.enable = False
+		self.enable = True
 		self.plan = True
 
 		# Set ROS topics publishers
@@ -55,6 +55,7 @@ class BarDetect():
 		sub_image = rospy.Subscriber('/camera/image', Image, self.cbImageProjection, queue_size=1)
 		sub_tl = rospy.Subscriber('state', String, self.cb_ts, queue_size=1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
+		sub_start = rospy.Subscriber('start_mission', Bool, self.cbStart, queue_size = 1)
 
 		# Do every subscriber's method until ros is shut down
 		while not rospy.is_shutdown():
@@ -68,18 +69,19 @@ class BarDetect():
 			except KeyboardInterrupt:
 				cv2.destroyAllWindows()
 				break
-
+	
+	# Listens for the start flag
+	def cbStart(self, data):
+		self.enable = not data.data
 
 	# Listens for the plan's state
 	def cbPlan(self, data):
 		self.plan = data.data
 
-
 	# Listens for the robot's state
 	def cb_ts(self, data):
 		if int(data.data) >= 5:
 			self.enable = True
-
 
 	# Prepares an image for detection of red rectangles
 	def cbImageProjection(self, data):

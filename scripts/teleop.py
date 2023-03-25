@@ -3,8 +3,8 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-from std_msgs.msg import String
-import sys, select, os
+from std_msgs.msg import String, Bool
+import sys, os
 if os.name == 'nt':
 	import msvcrt
 else:
@@ -45,6 +45,7 @@ class Teleop():
 		"""
 
 		self.key = " "
+		self.start = False
 
 		self.target_linear_vel   = 0.0
 		self.target_angular_vel  = 0.0
@@ -55,8 +56,12 @@ class Teleop():
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
 
 		btn_sub = rospy.Subscriber('teleop_btn', String, self.cb_btn, queue_size=1)
+		start_sub = rospy.Subscriber('start_mission', Bool, self.cb_start, queue_size=1)
 
 		self.main()
+
+	def cb_start(self, data):
+		self.start = data.data
 
 	def cb_btn(self, data):
 		self.key = data.data
@@ -69,7 +74,7 @@ class Teleop():
 	
 	def main(self):
 		try:
-			while not rospy.is_shutdown():
+			while not rospy.is_shutdown() and not self.start:
 				target_angular_vel = 0.0
 				
 				if self.key == 'w' :

@@ -65,7 +65,7 @@ class SignDetect():
 		# Initializing global values
 		self.cvBridge = CvBridge()
 		self.counter = 1
-		self.use_signs = False
+		self.use_signs = True
 		self.sign_msg = String()
 		self.plan = True
 		self.kp_ideal, self.des_ideal, self.sift = standart_signs()
@@ -79,11 +79,13 @@ class SignDetect():
 		# Set publishers for image of signs and detected sign
 		self.pub_image = rospy.Publisher('sign_image', Image, queue_size=1)
 		self.pub_sign = rospy.Publisher('sign', String, queue_size=1)
+		self.pub_log = rospy.Publisher('log_msg', String, queue_size=1)
 
 		# Set subscribers for the ROS topics
 		sub_image = rospy.Subscriber('/camera/image', Image, self.cbImageProjection, queue_size=1)
 		sub_ts = rospy.Subscriber('state', String, self.cb_ts, queue_size=1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
+		sub_start = rospy.Subscriber('start_mission', Bool, self.cbStart, queue_size = 1)
 
 		# While ros is not shut down - handle every subscriber's method
 		while not rospy.is_shutdown():
@@ -97,6 +99,9 @@ class SignDetect():
 			except KeyboardInterrupt:
 				cv2.destroyAllWindows()
 				break			
+	
+	def cbStart(self, data):
+		self.use_signs = not data.data
 
 	# Listens fot the plan's state
 	def cbPlan(self, data):
@@ -132,6 +137,7 @@ class SignDetect():
 			if result == True:
 				if i == 0:
 					self.sign_msg.data = "stop"
+					self.pub_log.publish("Stop detected")
 				elif i == 1:
 					self.sign_msg.data = "parking"
 				else:

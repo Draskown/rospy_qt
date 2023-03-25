@@ -34,7 +34,6 @@ class Parking():
 					if(self.parking == True):
 						self.pub_msg.publish("Start parking mission\r\n")
 						rospy.sleep(6.3)
-						#print(self.distance)
 						if(self.distance > 1 or self.distance == 0):
 							self.do_parking()
 						else:
@@ -112,6 +111,7 @@ class Parking():
 		self.pub_velocity(0,0,0.5)
 		flag_move_line.data = True
 		self.pub_line_move.publish(flag_move_line)
+		self.pub_msg.publish("Finish parking mission\r\n")
 
 
 if __name__ == '__main__':
