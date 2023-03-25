@@ -44,14 +44,14 @@ class MainWindow(QMainWindow):
         roslaunch.configure_logging(uuid)
         self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["/root/ros_workspace/src/rospy_qt/launch/Main.launch"])
         self.launch.start()
+        
+		# Set a publisher for the ROS topic
+        self.start_pub = rospy.Publisher('start_mission', Bool, queue_size=1)
 
         # ROS topic subscribers
         camera_sub = rospy.Subscriber('/camera/image', Image, self.cb_cam, queue_size=1)
         plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
         log_sub = rospy.Subscriber('log_msg', String, self.cb_log, queue_size=1)
-        
-		# Set a publisher for the ROS topic
-        self.start_pub = rospy.Publisher('start_mission', Bool, queue_size=1)
 
     def init_UI(self):       
         # Set window title

@@ -23,12 +23,6 @@ class Encoders():
         self.left_enc = 0.0
         self.right_enc = 0.0
 
-        # Create ROS topics subscribers
-        rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
-        rospy.Subscriber('set_x', Float64, self.set_x, queue_size=1)
-        rospy.Subscriber('set_y', Float64, self.set_y, queue_size=1)
-        rospy.Subscriber('set_direction', Float64, self.set_direction, queue_size=1)
-
         # Publishers for positions
         self.position_x_publisher = rospy.Publisher('position_x', Float64, queue_size=1)
         self.position_y_publisher = rospy.Publisher('position_y', Float64, queue_size=1)
@@ -36,6 +30,12 @@ class Encoders():
 
         self.enc_r_pub = rospy.Publisher('enc_r', Float64, queue_size=1)
         self.enc_l_pub = rospy.Publisher('enc_l', Float64, queue_size=1)
+
+        # Create ROS topics subscribers
+        rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
+        rospy.Subscriber('set_x', Float64, self.set_x, queue_size=1)
+        rospy.Subscriber('set_y', Float64, self.set_y, queue_size=1)
+        rospy.Subscriber('set_direction', Float64, self.set_direction, queue_size=1)
 
 		# Do every subscriber's method until ros is shut down
         while not rospy.is_shutdown():

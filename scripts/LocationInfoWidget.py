@@ -21,6 +21,10 @@ class LocationInfoWidget(QWidget):
 
         self.initUI()
 
+        # Set publishers for ROS topics
+        self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
+        self.position_y_pub = rospy.Publisher('set_y', Float64, queue_size=1)
+
         # Subscribers for the positions
         x_sub = rospy.Subscriber('position_x', Float64, self.set_x, queue_size=1)
         y_sub = rospy.Subscriber('position_y', Float64, self.set_y, queue_size=1)
@@ -29,10 +33,6 @@ class LocationInfoWidget(QWidget):
         enc_l_sub = rospy.Subscriber('enc_l', Float64, self.set_left, queue_size=1)
         pub_cor_sub = rospy.Subscriber('cor_pos', Float64, self.set_cor_pos, queue_size=1)
         dir_cor_sub = rospy.Subscriber('cor_dir', Float64, self.set_cor_dir, queue_size=1)
-
-        # Set ROS Publishers
-        self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
-        self.position_y_pub = rospy.Publisher('set_y', Float64, queue_size=1)
 
     # Events
     def keyPressEvent(self, e):

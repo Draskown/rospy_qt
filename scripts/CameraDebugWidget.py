@@ -26,16 +26,16 @@ class CameraDebugWidget(QWidget):
         # CV converter
         self.cvBridge = CvBridge()       
 
-        # Subscribers for the ROS topics   
-        front_cam_sub = rospy.Subscriber("decided_img", Image, self.cb_front, queue_size=1)
-        line_cam_sub = rospy.Subscriber("image", Image, self.cb_line, queue_size=1)
-
         # Publishers for the ROS topics
         self.front_mode_pub = rospy.Publisher('front_camera_mode', Int8, queue_size=1)
         self.line_mode_pub = rospy.Publisher('line_camera_mode', Int8, queue_size=1)
         self.show_env_pub = rospy.Publisher('show_env', Bool, queue_size=1)
         self.show_persp_pub = rospy.Publisher('show_persp', Bool, queue_size=1)
         self.show_line_det_pub = rospy.Publisher('show_line_det', Bool, queue_size=1)
+
+        # Subscribers for the ROS topics   
+        front_cam_sub = rospy.Subscriber("decided_img", Image, self.cb_front, queue_size=1)
+        line_cam_sub = rospy.Subscriber("image", Image, self.cb_line, queue_size=1)
 
     # Events
     def keyPressEvent(self, e):

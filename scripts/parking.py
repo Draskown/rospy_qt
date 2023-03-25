@@ -16,15 +16,15 @@ class Parking():
 		self.parking = False
 		self.plan = True
 
-		# Set subscibers for ROS topics
-		sub_sign = rospy.Subscriber('sign', String, self.cb_sign, queue_size=1)
-		sub_scan = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
-		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
-
 		# Set a publisher for robot's velocity, moving along the line flag and to public log messages
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_line_move = rospy.Publisher('line_move_flag', Bool, queue_size=1)
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+
+		# Set subscibers for ROS topics
+		sub_sign = rospy.Subscriber('sign', String, self.cb_sign, queue_size=1)
+		sub_scan = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
+		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
 
 		# While ROS is not shut down and if parking flag is true
 		# Perform parking

@@ -27,6 +27,10 @@ class Xlidarcontrol():
 		self.seen_object = "none"
 		
 		self.empty_image = np.zeros(shape=(400, 400), dtype=np.uint8)
+		
+		# Set publishers for the image and lidar's data
+		self.img_pub = rospy.Publisher('decided_img', Image, queue_size=1)
+		self.scan_pub = rospy.Publisher('scan_img', Image, queue_size=1)
 
 		# Set subscribers for ROS topics
 		sign_msg_sub = rospy.Subscriber('sign', String, self.cb_sign, queue_size=1)
@@ -40,10 +44,6 @@ class Xlidarcontrol():
 		plan_sub = rospy.Subscriber('plan', Bool, self.cb_plan, queue_size=1)
 		front_cam_sub = rospy.Subscriber('front_camera_mode', Int8, self.cb_front_mode, queue_size=1)
 		show_env_sub = rospy.Subscriber('show_env', Bool, self.cb_switch_env, queue_size=1)
-		
-		# Set publishers for the image and lidar's data
-		self.img_pub = rospy.Publisher('decided_img', Image, queue_size=1)
-		self.scan_pub = rospy.Publisher('scan_img', Image, queue_size=1)
 		
 		# Handle the class until the ROS is shut down
 		while not rospy.is_shutdown():

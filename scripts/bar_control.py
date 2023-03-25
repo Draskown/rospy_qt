@@ -27,16 +27,16 @@ class BarControl():
 		self.plan = True
 		self.state = ""
 
+		# Publisher for ROS topics
+		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+		self.pub_dir_cor = rospy.Publisher('cor_dir', Float64, queue_size=1)
+
 		# Susbcribers for ROS topics 
 		sub_bar = rospy.Subscriber('bar', String, self.cb_bar, queue_size=1)
 		sub_odom = rospy.Subscriber('odom', Odometry, self.cb_odom, queue_size=1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
 		sub_ts = rospy.Subscriber('state', String, self.cb_ts, queue_size=1)
-
-		# Publisher for ROS topics
-		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
-		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
-		self.pub_dir_cor = rospy.Publisher('cor_dir', Float64, queue_size=1)
 
 		# Move endlessly until flag 'crunches' is True
 		while not rospy.is_shutdown():

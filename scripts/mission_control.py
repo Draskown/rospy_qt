@@ -28,12 +28,12 @@ class ControlMission():
 		self.path = 0.0
 		
 		self.plan = True
+		
+		self.pub_state = rospy.Publisher('state', String, queue_size=1)
 
 		self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
 		sub_odom = rospy.Subscriber('codom', Float64, self.getOdom, queue_size = 1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size=1)
-		
-		self.pub_state = rospy.Publisher('state', String, queue_size=1)
 		
 		self.loadMissionModel()
 		self.setTraffic()
