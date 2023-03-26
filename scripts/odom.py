@@ -5,6 +5,7 @@
 '''
 Coordinates of important places on the map
 
+Start: 0.245, -1.787
 Traffic light: {0, 0.3}, 0.2
 Parking: {1.60, 2.00}, 1.83
 Bar: {2.95, 3.00}, 3
@@ -30,6 +31,8 @@ class OdomCalculator():
 		self.closest_ten = 2
 		self.k = 0
 		self.correction = Float64()
+		self.start = False
+		self.FOV = 45
 
 		# Set publishers for the custom odometry calculation, plan's state
 		# And to publish the log messages
@@ -65,6 +68,8 @@ class OdomCalculator():
 	def cb_vel(self, velocity):
 		self.x.data += velocity.linear.x / 100.0
 
+		print(self.x.data)
+
 		# And then corrects the robot's position
 		self.odom_pub.publish(self.x)
 
@@ -75,7 +80,7 @@ class OdomCalculator():
 		# Count the points that are close to the robot
 		if self.x.data <= 0.1:
 			for i in range(359):
-				if i < 235 and i > 65:
+				if i < 360-self.FOV and i > self.FOV:
 					continue
 				if data.ranges[i] < self.closest_ten:
 					self.k+=1
@@ -88,7 +93,7 @@ class OdomCalculator():
 	# Listens for the traffic light's state
 	def cb_tl(self, data):
 		# If the robot is not in the supposed place - print the error
-		if (data.data != "none" and self.x.data > 0.3) or (self.x.data > 0.2 and self.x.data <= 0.22 and data.data == "none"):
+		if (data.data != "none" and self.x.data > 0.3) or (self.x.data > 0.2 and self.x.data <= 0.3 and data.data == "none"):
 			self.plan = False
 			self.msg = "Traffic light is not here"
 		# If the robot is - correct the position of the robot

@@ -1,7 +1,7 @@
-import rospy
+import rospy, numpy as np
 from std_msgs.msg import Float64
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import (QWidget,
                              QVBoxLayout,
                              QHBoxLayout,
@@ -24,6 +24,7 @@ class LocationInfoWidget(QWidget):
         # Set publishers for ROS topics
         self.position_x_pub = rospy.Publisher('set_x', Float64, queue_size=1)
         self.position_y_pub = rospy.Publisher('set_y', Float64, queue_size=1)
+        self.direction_pub = rospy.Publisher('set_dir', Float64, queue_size=1)
 
         # Subscribers for the positions
         x_sub = rospy.Subscriber('position_x', Float64, self.set_x, queue_size=1)
@@ -57,9 +58,9 @@ class LocationInfoWidget(QWidget):
 
         # Create user inputs and buttons for setting the position
         self.x_start_input = QLineEdit(self)
-        self.x_start_input.setValidator(QIntValidator())
+        self.x_start_input.setValidator(QDoubleValidator())
         self.y_start_input = QLineEdit(self)
-        self.y_start_input.setValidator(QIntValidator())
+        self.y_start_input.setValidator(QDoubleValidator())
         self.set_position_btn = QPushButton("Set position")
         self.reset_position_btn = QPushButton("Reset position")
 
@@ -163,8 +164,8 @@ class LocationInfoWidget(QWidget):
     def set_position(self):
         x_pos = Float64()
         y_pos = Float64()
-        x_pos.data = self.position[0]
-        y_pos.data = self.position[1]
+        x_pos.data = np.float(self.x_start_input.text())
+        y_pos.data = np.float(self.y_start_input.text())
         self.position_x_pub.publish(x_pos)
         self.position_y_pub.publish(y_pos)
     
@@ -178,6 +179,7 @@ class LocationInfoWidget(QWidget):
         self.y_start_input.setText("")
         self.position_x_pub.publish(x_pos)
         self.position_y_pub.publish(y_pos)
+        self.direction_pub.publish(0.0)
 
     # Listens for the left encoder's value
     def set_left(self, data):

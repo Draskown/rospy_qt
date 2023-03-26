@@ -105,6 +105,7 @@ class TlDetector():
 		self.counter = 1
 		self.light_msg = String()
 		self.plan = True
+		self.start = False
 
 		# Set the publishers for tl's image and state
 		self.pub_image = rospy.Publisher('image_traffic_light', Image, queue_size=1)
@@ -113,11 +114,12 @@ class TlDetector():
 		# Set subscribers for the ROS topics
 		sub_image = rospy.Subscriber('/camera/image', Image, self.cbImageProjection, queue_size=1)
 		sub_plan = rospy.Subscriber('plan', Bool, self.cbPlan, queue_size = 1)
+		start_sub = rospy.Subscriber('start_mission', Bool, self.cbStart, queue_size = 1)
 
 		# While ROS is not shut down and tl is not detected - listen for the detection
 		while not rospy.is_shutdown():
 				try:
-					if self.light_msg.data != "green" and self.plan:
+					if (self.light_msg.data != "green" and self.plan) or not self.start:
 						rospy.sleep(0.1)
 					else:
 						rospy.signal_shutdown('force ending')
@@ -126,6 +128,10 @@ class TlDetector():
 				except KeyboardInterrupt:
 					cv2.destroyAllWindows()
 					break
+	
+	# Listens fot the start flag
+	def cbStart(self, data):
+		self.start = data.data
 
 	# Listens for the plan's state
 	def cbPlan(self, data):
