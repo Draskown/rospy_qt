@@ -1,6 +1,5 @@
 import rospy, roslaunch
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, String
 from cv_bridge import CvBridge
 
@@ -222,7 +221,7 @@ class Worker(QObject):
         while True:
             if len(self.msg) > 0:
                 self.message.emit(self.msg.pop(0))
-                QThread.sleep(1)
+                QThread.sleep(2)
             else:
                 self.message.emit("")
 

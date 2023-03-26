@@ -154,11 +154,13 @@ class LocationInfoWidget(QWidget):
     def set_dir(self, data):
         label_text = str(round(data.data, 3))
         self.direction_label.setText(label_text)
+        rospy.sleep(0.33)
 
     # Updates the position label
     def update_position(self):
         label_text = str(round(self.position[0], 3)) + ", " + str(round(self.position[1], 3))
         self.global_position.setText(label_text)
+        rospy.sleep(0.33)
 
     # Publish the set position of the encoders
     def set_position(self):
@@ -185,11 +187,13 @@ class LocationInfoWidget(QWidget):
     def set_left(self, data):
         label_text = str(round(data.data, 3))
         self.left_encoder.setText(label_text)
+        rospy.sleep(0.33)
 
     # Listens for the right encoder's value
     def set_right(self, data):
         label_text = str(round(data.data, 3))
         self.right_encoder.setText(label_text)
+        rospy.sleep(0.33)
 
     # Listens for the correction of the position
     def set_cor_pos(self, data):
