@@ -33,7 +33,7 @@ class OdomCalculator():
 		self.correction = Float64()
 		self.start = False
 		self.FOV = 45
-		self.tl = False
+		self.light = False
 
 		# Set publishers for the custom odometry calculation, plan's state
 		# And to publish the log messages
@@ -96,6 +96,8 @@ class OdomCalculator():
 
 	# Listens for the traffic light's state
 	def cb_tl(self, data):
+		print(data)
+		print(self.light)
 		# If the robot is not in the supposed place - print the error
 		if (data.data != "none" and self.x.data > 0.3) or (self.x.data > 0.2 and self.x.data <= 0.3 and data.data == "none" and not self.light):
 			self.plan = False

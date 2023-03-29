@@ -18,7 +18,7 @@ class LightController():
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_line_move = rospy.Publisher('line_move_flag', Bool, queue_size=1)
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
-		self.pub_tl = rospy.Publisher('tl_msg', String, self.cb_ts, queue_size=1)
+		self.pub_tl = rospy.Publisher('tl_msg', Bool, queue_size=1)
 
 		# Set subscribers for ROS topics
 		sub_sign = rospy.Subscriber('traffic_light', String, self.cb_traffic_light, queue_size=1)
