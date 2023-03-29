@@ -137,7 +137,7 @@ class SignDetect():
 			if result == True:
 				if i == 0:
 					self.sign_msg.data = "stop"
-					self.pub_log.publish("Stop detected")
+					self.pub_log.publish("Stop detected \r\n")
 				elif i == 1:
 					self.sign_msg.data = "parking"
 				else:
