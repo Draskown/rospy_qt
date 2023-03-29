@@ -59,7 +59,12 @@ class LogWidget(QWidget):
         self.setLayout(layout)
     
     def put_log(self, data):
-        if data.data != "":
-            self.log += data.data
-            self.log_label.setText(self.log)
+        if len(self.log) > 0:
+            if data.data != "" and (self.log.splitlines()[-1]+"\r\n") != data.data:
+                self.log += data.data
+                self.log_label.setText(self.log)
+        else:
+            if data.data != "":
+                self.log += data.data
+                self.log_label.setText(self.log)
     ###

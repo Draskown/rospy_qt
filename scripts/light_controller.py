@@ -18,6 +18,7 @@ class LightController():
 		self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.pub_line_move = rospy.Publisher('line_move_flag', Bool, queue_size=1)
 		self.pub_msg = rospy.Publisher('log_msg', String, queue_size=1)
+		self.pub_tl = rospy.Publisher('tl_msg', String, self.cb_ts, queue_size=1)
 
 		# Set subscribers for ROS topics
 		sub_sign = rospy.Subscriber('traffic_light', String, self.cb_traffic_light, queue_size=1)
@@ -31,6 +32,7 @@ class LightController():
 				if self.plan:
 					if self.light:
 						self.pub_msg.publish("Start traffic light mission \r\n")
+						self.pub_tl.publish(self.light)
 						self.do_traffic_light()
 						break
 					else:
@@ -90,6 +92,7 @@ class LightController():
 		# Set the flag to move along the lines back
 		flag_move_line.data = True
 		self.pub_line_move.publish(flag_move_line)
+		self.pub_msg.publish("Finish traffic light mission \r\n")
 
 
 if __name__ == '__main__':

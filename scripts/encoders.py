@@ -77,17 +77,17 @@ class Encoders():
 
             # Calculate delta s and delta turn
             delta_s = self.wheel_radius * (distance_right_now + distance_left_now) / 2.0
-            delta_theta = self.wheel_radius * (distance_right_now - distance_left_now) / (self.wheel_radius * 2.0)
+            delta_theta = (distance_right_now - distance_left_now) / self.wheel_radius
 
             # Calculate absolute positions
-            self.position_x += delta_s * math.cos(self.direction + (delta_theta / 2.))
-            self.position_y += delta_s * math.sin(self.direction + (delta_theta / 2.))
+            self.position_x += delta_s * math.cos(self.direction + (delta_theta / 2.0))
+            self.position_y += delta_s * math.sin(self.direction + (delta_theta / 2.0))
             self.direction += delta_theta
 
             # Publish positions
             self.position_x_publisher.publish(self.position_x)
             self.position_y_publisher.publish(self.position_y)
-            self.direction_publisher.publish(self.direction % math.radians(360.))
+            self.direction_publisher.publish(self.direction % math.radians(360.0))
 
             # Publish encoders
             self.enc_l_pub.publish(self.left_enc)

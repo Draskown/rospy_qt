@@ -33,6 +33,7 @@ class OdomCalculator():
 		self.correction = Float64()
 		self.start = False
 		self.FOV = 45
+		self.tl = False
 
 		# Set publishers for the custom odometry calculation, plan's state
 		# And to publish the log messages
@@ -45,8 +46,9 @@ class OdomCalculator():
 		cmd_sub = rospy.Subscriber('cmd_vel', Twist, self.cb_vel, queue_size=1)
 		scan_sub = rospy.Subscriber('scan', LaserScan, self.cb_scan, queue_size=1)
 		sign_msg_sub = rospy.Subscriber('sign', String, self.cb_sign, queue_size=1)
-		tl_msg_sub = rospy.Subscriber('tl_msg', String, self.cb_tl, queue_size=1)
+		tl_msg_sub = rospy.Subscriber('traffic_light', String, self.cb_tl, queue_size=1)
 		bar_msg_sub = rospy.Subscriber('bar', String, self.cb_bar, queue_size=1)
+		tl_msg_sub = rospy.Subscriber('tl_msg', Bool, self.cb_tl_msg, queue_size=1)
 
 		# Handle the class until the ROS is shut down
 		while not rospy.is_shutdown():
@@ -64,11 +66,13 @@ class OdomCalculator():
 			rospy.signal_shutdown('force ending')
 			return
 
+	# Listens for start of light mission
+	def cb_tl_msg(self, data):
+		self.light = data.data
+
 	# Listens for the robot's velocity
 	def cb_vel(self, velocity):
 		self.x.data += velocity.linear.x / 100.0
-
-		print(self.x.data)
 
 		# And then corrects the robot's position
 		self.odom_pub.publish(self.x)
@@ -93,7 +97,7 @@ class OdomCalculator():
 	# Listens for the traffic light's state
 	def cb_tl(self, data):
 		# If the robot is not in the supposed place - print the error
-		if (data.data != "none" and self.x.data > 0.3) or (self.x.data > 0.2 and self.x.data <= 0.3 and data.data == "none"):
+		if (data.data != "none" and self.x.data > 0.3) or (self.x.data > 0.2 and self.x.data <= 0.3 and data.data == "none" and not self.light):
 			self.plan = False
 			self.msg = "Traffic light is not here"
 		# If the robot is - correct the position of the robot

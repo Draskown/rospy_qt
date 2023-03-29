@@ -35,7 +35,7 @@ class Xlidarcontrol():
 		# Set subscribers for ROS topics
 		sign_msg_sub = rospy.Subscriber('sign', String, self.cb_sign, queue_size=1)
 		sign_img_sub = rospy.Subscriber('sign_image', Image, self.cb_sign_img, queue_size=1)
-		tl_msg_sub = rospy.Subscriber('tl_msg', String, self.cb_tl, queue_size=1)
+		tl_msg_sub = rospy.Subscriber('traffic_light', String, self.cb_tl, queue_size=1)
 		tl_sub = rospy.Subscriber('image_traffic_light', Image, self.cb_tl_img, queue_size = 1)
 		bar_sub = rospy.Subscriber('image_bar', Image, self.cb_bar_img, queue_size=1)
 		bar_msg_sub = rospy.Subscriber('bar', String, self.cb_bar, queue_size=1)
